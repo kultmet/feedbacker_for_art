@@ -5,7 +5,7 @@ api_yamdb
 
 Клонировать репозиторий и перейти в него в командной строке:
 
-<code>git clone https://github.com/yandex-praktikum/kittygram.git</code><br>
+<code>git clone git@github.com:kultmet/api_yamdb.git</code><br>
 
 <code>cd <ваша_папка></code><br>
 
