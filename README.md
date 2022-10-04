@@ -1,8 +1,11 @@
 # api_final
 ## Авторы:
 [kultmet](https://github.com/kultmet)
+
 [??](https://github.com/??)
+
 [olka-ayacaste](https://github.com/olka-ayacaste)
+
 ## Описание:
 ### REST API для YaMDb
 Создан на основе библиотеки [Django REST Framework (DRF)](https://github.com/ilyachch/django-rest-framework-rusdoc)
