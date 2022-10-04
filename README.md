@@ -1,8 +1,11 @@
 # api_final
 ## Авторы:
 [kultmet](https://github.com/kultmet)
+
 [??](https://github.com/??)
+
 [olka-ayacaste](https://github.com/olka-ayacaste)
+
 ## Описание:
 ### REST API для YaMDb
 Создан на основе библиотеки [Django REST Framework (DRF)](https://github.com/ilyachch/django-rest-framework-rusdoc)
@@ -85,17 +88,8 @@ http://127.0.0.1:8000/api/v1/titles/
 ```
 > пример POST запроса на (http://127.0.0.1:8000/api/v1/categories/):
 ```
-[
-  {
-    "count": 0,
-    "next": "string",
-    "previous": "string",
-    "results": [
-      {
-        "name": "string",
-        "slug": "string"
-      }
-    ]
-  }
-]
+{
+  "name": "string",
+  "slug": "string"
+}
 ```
