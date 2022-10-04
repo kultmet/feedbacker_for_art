@@ -11,12 +11,12 @@ from reviews.models import Review, Comment, Title
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    # queryset = Post.objects.select_related('author', )
-    # serializer_class = PostSerializer
+    serializer_class = ReviewSerializer
     # permission_classes = (
     #     IsAuthenticatedOrReadOnly,
     #     AuthorOwnerOrReadOnly,
     # )
+
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs['title_id'])
         return title.reviews.all()
@@ -27,17 +27,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    # serializer_class = CommentSerializer
+    serializer_class = CommentSerializer
     # permission_classes = (
     #     IsAuthenticatedOrReadOnly,
     #     AuthorOwnerOrReadOnly,
     # )
     # pagination_class = None
-    #
+
     def get_queryset(self):
         review = get_object_or_404(Review, pk=self.kwargs['review_id'])
         return review.comments.all()
 
     def perform_create(self, serializer):
-        review = get_object_or_404(Review, pk=self.kwargs['post_id'])
-        serializer.save(author=self.request.user, post=post)
+        review = get_object_or_404(Review, pk=self.kwargs['review_id']) #?itle=title_id
+        serializer.save(author=self.request.user, review=review)

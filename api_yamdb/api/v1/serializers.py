@@ -7,20 +7,33 @@ from reviews.models import (
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    # author = SlugRelatedField(slug_field='username', read_only=True)
-    #
-    # class Meta:
-    #     fields = '__all__'
-    #     model = Post
-    pass
+    author = SlugRelatedField(
+        slug_field='username', read_only=True
+    )
+    title = serializers.SlugRelatedField(
+        slug_field='name', read_only=True
+    )
+
+    class Meta:
+        model = Review
+        fields = ('id',
+                  'text',
+                  'author',
+                  'score',
+                  'pub_date')
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
+        slug_field='username', read_only=True
+    )
+    review = serializers.SlugRelatedField(
+        slug_field='text', read_only=True
     )
 
     class Meta:
-        fields = '__all__'
         model = Comment
-        read_only_fields = ('post',)
+        fields = ('id',
+                  'text',
+                  'author',
+                  'pub_date')
