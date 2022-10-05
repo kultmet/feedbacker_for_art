@@ -7,7 +7,10 @@ User = get_user_model()    # временно
 
 
 class Title(models.Model):                      # временно
-    name = models.CharField(max_length=200)     # временно
+    name = models.CharField(max_length=200)
+
+    class Meta:
+        ordering = ['name']
 
 
 class Review(models.Model):

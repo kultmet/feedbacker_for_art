@@ -4,10 +4,12 @@ from django.urls import include, path
 from .views import (
     ReviewViewSet,
     CommentViewSet,
+    TitleViewSet,
 )
 
 v1_router = DefaultRouter()
 
+v1_router.register('titles', TitleViewSet, basename='titles')
 v1_router.register(r'titles/(?P<title_id>\d+)/reviews',
                    ReviewViewSet,
                    basename='comments')

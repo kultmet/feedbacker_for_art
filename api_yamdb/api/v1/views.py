@@ -5,9 +5,15 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 
 from .serializers import (
     ReviewSerializer,
-    CommentSerializer)
+    CommentSerializer,
+    TitleSerializer)
 from reviews.models import Review, Comment, Title
 # from .permissions import AuthorOwnerOrReadOnly
+
+
+class TitleViewSet(viewsets.ModelViewSet):      # временно
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
