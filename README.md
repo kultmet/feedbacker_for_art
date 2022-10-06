@@ -1,24 +1,96 @@
-# api_yamdb
-api_yamdb
 
-Разворачиваем проект:
+# api_final
+## Авторы:
+[kultmet](https://github.com/kultmet)
+
+[??](https://github.com/??)
+
+[olka-ayacaste](https://github.com/olka-ayacaste)
+
+## Описание:
+### REST API для YaMDb
+Создан на основе библиотеки [Django REST Framework (DRF)](https://github.com/ilyachch/django-rest-framework-rusdoc)
+
+
+>YaMDb - это платформа для сбора отзывов и оценок по различным категориям.
+
+## Технологии
+Python 3.7
+
+Django 3.2.15
+
+
+## Запуск проекта:
 
 Клонировать репозиторий и перейти в него в командной строке:
 
-<code>git clone </code><br>
+```
+git clone git@github.com:kultmet/api_yamdb.git
+```
 
-<code>cd <ваша_папка></code><br>
+```
+cd api_yamdb
+```
 
-Cоздать и активировать виртуальное окружение:<br>
+Cоздать и активировать виртуальное окружение:
 
-<code>python3 -m venv env</code><br>
+```
+python -m venv env
+```
 
-<code>source env/bin/activate</code><br>
-<<<<<<< HEAD
-=======
+```
+source venv/Scripts/activate
+```
 
-Установить зависимости из файла requirements.txt:<br>
+```
+python -m pip install --upgrade pip
+```
 
-<code>python3 -m pip install --upgrade pip</code><br>
+Установить зависимости из файла requirements.txt:
 
-<code>pip install -r requirements.txt</code><br>
+```
+pip install -r requirements.txt
+```
+
+Выполнить миграции:
+
+```
+python manage.py migrate
+```
+
+Запустить проект:
+
+```
+python manage.py runserver
+```
+
+>Когда вы запустите проект, по адресу http://127.0.0.1:8000/redoc/ будет доступна документация для API YaMDb. В документации описано, как работает API. Документация представлена в формате Redoc.
+
+## Примеры запросов
+
+* Основные эндпоинты для аутентификации нового пользователя
+> Для аутентификации применены JWT-токены.
+
+  Создание JWT-токена:
+```
+http://127.0.0.1:8000/api/v1/jwt/create/
+```
+> Токен необходимо передавать в заголовке каждого запроса, в поле Authorization. Перед самим токеном должно стоять ключевое слово Bearer и пробел.
+
+* Основные эндпоинты API
+```
+http://127.0.0.1:8000/api/v1/categories/
+```
+```
+http://127.0.0.1:8000/api/v1/genres/
+```
+```
+http://127.0.0.1:8000/api/v1/titles/
+```
+> пример POST запроса на (http://127.0.0.1:8000/api/v1/categories/):
+```
+{
+  "name": "string",
+  "slug": "string"
+}
+```
