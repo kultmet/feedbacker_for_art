@@ -1,22 +1,34 @@
 from rest_framework import viewsets, permissions, mixins
 from rest_framework.generics import get_object_or_404
+
 # from rest_framework.decorators import api_view, permission_classes
 # from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
 
-from .serializers import (
-    ReviewSerializer,
-    CommentSerializer,
-    TitleSerializer)
-from reviews.models import Review, Comment, Title
+from .serializers import CategorySerializer, GenreSerializer, TitleSerializer, ReviewSerializer, CommentSerializer
+from reviews.models import Category, Genre, Title, Review, Comment
 # from .permissions import AuthorOrModeratorOrAdminOrReadOnly
 
 
 # @api_view(['GET'])
 # @permission_classes([AllowAny])
-class TitleViewSet(viewsets.ModelViewSet):      # временно
+class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет для работы с произведениями"""
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
     # permission_classes = (IsAdminUser,)
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    """Вьюсет для работы с категориями"""
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    """Вьюсет для работы с жанрами"""
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+
 
 # @api_view(['GET'])
 # @permission_classes([AllowAny])
