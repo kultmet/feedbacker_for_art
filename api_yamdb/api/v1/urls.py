@@ -1,7 +1,18 @@
+from site import venv
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (CategoryViewSet, GenreViewSet, TitleViewSet, ReviewViewSet, CommentViewSet,)
+from .views import (
+    CategoryViewSet,
+    GenreViewSet,
+    TitleViewSet,
+    ReviewViewSet,
+    CommentViewSet,
+    UserViewSet,
+    user_me,
+    signup,
+    token
+)
 
 app_name = 'api'
 
@@ -17,7 +28,11 @@ v1_router.register(r'titles/(?P<title_id>\d+)/reviews',
 v1_router.register(r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
                    CommentViewSet,
                    basename='comments')
+v1_router.register(r'users', UserViewSet)
 
 urlpatterns = [
     path('', include(v1_router.urls)),
+    path('users/me/', user_me, name='user_me'),
+    path('api/v1/auth/signup/', signup, name='signup'),
+    path('api/v1/auth/token/', token, name='token'),
 ]

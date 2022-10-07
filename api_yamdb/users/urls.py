@@ -9,5 +9,6 @@ router.register(r'users', UserViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('me/', user_me, name='user_me')
+    path('users/me/', user_me, name='user_me'),
 ]
+
