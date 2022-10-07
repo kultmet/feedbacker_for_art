@@ -1,6 +1,12 @@
-from email.policy import default
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
+
+
+# class UserManager(UserManager):
+#     def create_user(self, username, email=None, password=None, **extra_fields):
+#         extra_fields.setdefault('is_staff', False)
+#         extra_fields.setdefault('is_superuser', False)
+#         return self._create_user(username, email, password, **extra_fields)
 
 
 class User(AbstractUser):
@@ -17,17 +23,12 @@ class User(AbstractUser):
     )
     bio = models.TextField(blank=True, null=True)
     role = models.PositiveSmallIntegerField(choices=CHOICES, default=1)
-    confirmation_code = models.IntegerField(blank=True, null=True)
-    password = models.CharField(max_length=255,blank=True, null=True)
+    confirmation_code = models.CharField(max_length=255, blank=True, null=True)
+    password = models.CharField(max_length=255, blank=True, null=True)
 
+    USERNAME_FIELD = 'username'
     CONFIRMATION_CODE_FIELD = 'confirmation_code'
-    
+    REQUIRED_FIELDS = [CONFIRMATION_CODE_FIELD]
     
     def __str__(self) -> str:
         return self.username
-
-
-# class ConfirmationCode(models.Model):
-#     email = models.EmailField()
-#     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
-#     confirmation_code = models.IntegerField(blank=True, null=True)
