@@ -29,8 +29,8 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для работы с произведениями"""
-    category = CategorySerializer(many=False, read_only=True)
-    genre = GenreSerializer(many=False, read_only=True)
+    category = CategorySerializer(many=False, )
+    genre = GenreSerializer(many=False, )
 
     class Meta:
         model = Title
@@ -38,6 +38,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для работы с отзывами"""
     author = SlugRelatedField(
         slug_field='username', read_only=True
     )
@@ -55,27 +56,30 @@ class ReviewSerializer(serializers.ModelSerializer):
                   'pub_date')
 
     def validate(self, data):
-        author = self.context['request'].user
+        request = self.context['request']
+        author = request.user
         title_id = self.context['view'].kwargs.get('title_id')
-        if Review.objects.filter(title=title_id, author=author).exists():
-            raise ValidationError(
-                'Отзыв можно оставить один раз!'
-            )
+        if request.method == 'POST':
+            if Review.objects.filter(title=title_id, author=author).exists():
+                raise ValidationError(
+                    'Отзыв можно оставить один раз!'
+                )
         return data
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор для работы с отзывами"""
     author = serializers.SlugRelatedField(
         slug_field='username', read_only=True
     )
-    # review = serializers.SlugRelatedField(
-    #     slug_field='text', read_only=True
-    # )
+    review = serializers.SlugRelatedField(
+        slug_field='text', read_only=True
+    )
 
     class Meta:
         model = Comment
         fields = ('id',
                   'text',
-                  # 'review',
+                  'review',
                   'author',
                   'pub_date')
 

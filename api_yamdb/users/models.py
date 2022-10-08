@@ -22,7 +22,7 @@ class User(AbstractUser):
         unique=True
     )
     bio = models.TextField(blank=True, null=True)
-    role = models.PositiveSmallIntegerField(choices=CHOICES, default=1)
+    role = models.CharField(max_length=20, choices=CHOICES, default='user')
     confirmation_code = models.CharField(max_length=255, blank=True, null=True)
     password = models.CharField(max_length=255, blank=True, null=True)
 
