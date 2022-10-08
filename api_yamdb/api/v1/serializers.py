@@ -1,5 +1,7 @@
 from django.contrib.auth import authenticate, models
-from rest_framework import serializers
+from django.db.models import Avg
+from rest_framework.response import Response
+from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.relations import SlugRelatedField
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenObtainSerializer, PasswordField, TokenObtainSlidingSerializer
@@ -12,29 +14,77 @@ from reviews.models import (
 from users.models import User
 
 
-
 class GenreSerializer(serializers.ModelSerializer):
     """Сериализатор для работы с жанрами"""
+    """"
+    def validate(self, data):
+        if data == {}:
+            raise serializers.ValidationError
+        return data
+    """
+
     class Meta:
         model = Genre
-        fields = '__all__'
+        # fields = '__all__'
+        fields = ('name', 'slug')
 
 
 class CategorySerializer(serializers.ModelSerializer):
     """Сериализатор для работы с категориями"""
+    """
+    def validate(self, data):
+        if data == {}:
+            raise serializers.ValidationError
+        return data
+    """
+
     class Meta:
         model = Category
-        fields = '__all__'
+        # fields = '__all__'
+        fields = ('name', 'slug')
 
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор для работы с произведениями"""
     category = CategorySerializer(many=False, read_only=True)
-    genre = GenreSerializer(many=False, read_only=True)
+    genre = GenreSerializer(many=True, read_only=True)
+    """
+    category = SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+    genre = SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True
+    )
+    """
+    def get_score(self, obj):
+        return Avg('reviews__score')
+
+    """
+    def validate(self, data):
+        if data == {}:
+            raise serializers.ValidationError
+        return data
+    """
 
     class Meta:
         model = Title
         fields = '__all__'
+        read_only_fields = ('id',)
+        # exclude = ('id',)
+    """
+    def create(self, validated_data):
+        return Title.objects.create(
+            genre=validated_data['genre'],
+            category=validated_data['category']
+        )
+        # genre = validated_data.pop('genre')
+        # category = validated_data.pop('category')
+        # title = Title.objects.create(**validated_data)
+        # return title
+    """
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -205,5 +255,3 @@ class Fuck(TokenObtainPairSerializer):
     def validate(self, attrs):
         print(attrs)
         return super().validate(attrs)
-
-

@@ -1,11 +1,11 @@
-from rest_framework import viewsets, permissions, mixins, status
+from rest_framework import viewsets, permissions, mixins, status, filters
 from rest_framework.generics import get_object_or_404
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from rest_framework.pagination import PageNumberPagination
 
 # from rest_framework.decorators import api_view, permission_classes
 # from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
@@ -28,6 +28,16 @@ from reviews.models import Category, Genre, Title, Review, Comment
 from users.models import User
 from .utility import generate_confirmation_code, send_email_with_verification_code
 # from .permissions import AuthorOrModeratorOrAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly
+
+
+class CreateDestroyViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    pass
 
 
 # @api_view(['GET'])
@@ -36,19 +46,30 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с произведениями"""
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    # permission_classes = (IsAdminUser,)
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'year', 'genre__slug', 'category__slug']
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с категориями"""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['slug']
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с жанрами"""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['slug']
 
 
 # @api_view(['GET'])
