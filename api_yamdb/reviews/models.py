@@ -11,14 +11,15 @@ class Genre(models.Model):
     """Модель для работы с жанрами"""
     name = models.CharField(
         max_length=256,
-        default='drama',
+        default='--Пусто--',
         verbose_name='Название жанра'
     )
     slug = models.SlugField(
         max_length=50,
         unique=True,
         verbose_name='Конвертер пути',
-        help_text='Введите данные типа slug'
+        help_text='Введите данные типа slug',
+
     )
 
     class Meta:
@@ -32,10 +33,12 @@ class Genre(models.Model):
 class Category(models.Model):
     """Модель для работы с категориями"""
     name = models.CharField(
-        max_length=200,
+        max_length=256,
+        default='--Пусто--',
         verbose_name='Название категории'
     )
     slug = models.SlugField(
+        max_length=50,
         unique=True,
         verbose_name='Конвертер пути',
         help_text='Введите данные типа slug'
@@ -52,13 +55,15 @@ class Category(models.Model):
 class Title(models.Model):
     """Модель для работы с произведениями"""
     name = models.CharField(
-        max_length=200,
+        max_length=256,
         verbose_name='Название произведения'
     )
     description = models.TextField(
         verbose_name='Описание произведения'
     )
-    year = models.IntegerField()
+    year = models.PositiveSmallIntegerField(
+        verbose_name='Год создания произведения'
+    )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -67,19 +72,20 @@ class Title(models.Model):
         related_name='titles',
         verbose_name='Категория'
     )
-    genre = models.ForeignKey(
+    genre = models.ManyToManyField(
         Genre,
         # through='GenreToTitle',
-        on_delete=models.CASCADE,
+        # on_delete=models.SET_NULL,
+        # on_delete=models.CASCADE,
         related_name='titles',
-        verbose_name='Жанр',
-        null=True
+        verbose_name='Жанр'
+        # blank=True
+        # null=True
     )
-    rating = models.IntegerField(
-        verbose_name='Рейтинг',
-        null=True,
-        default=None
-    )
+    #rating = models.IntegerField(
+     #   verbose_name='Рейтинг',
+      #  null=True,
+       # default=None)
 
     class Meta:
         verbose_name = 'Произведение'
@@ -91,8 +97,8 @@ class Title(models.Model):
 
 class GenreToTitle(models.Model):
     """Модель связывающая произведение с жанром"""
-    title_id = models.ForeignKey(Title, on_delete=models.CASCADE)
-    genre_id = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
 
 class Review(models.Model):
