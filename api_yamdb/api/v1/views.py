@@ -1,6 +1,6 @@
 
 from os import stat
-from urllib import response
+from urllib import request, response
 from wsgiref import validate
 from rest_framework import viewsets, permissions, mixins, status, views
 from rest_framework.generics import get_object_or_404
@@ -110,19 +110,27 @@ class UserViewSet(viewsets.ModelViewSet):
         detail=False,
         url_path='me',
         methods=['get', 'patch'],
-        permission_classes=[permissions.IsAuthenticated,]
+        permission_classes=[permissions.IsAuthenticated,],
+        queryset = User.objects.all()
     )
     def my(self, request):
-        # Нужны только последние пять котиков белого цвета
+
         user = User.objects.get(id=request.user.id)
-        # Передадим queryset cats сериализатору 
-        # и разрешим работу со списком объектов
+
         if request.method == 'PATCH':
+            if request.user.role == 'admin':
+                serializer = self.get_serializer(user, data=request.data)
+                return Response(serializer.initial_data)
             print(request.user.role)
-            # if request.user.role != 'admin':
-                
-            serializer = self.get_serializer(user, data=request.data)
+            data = {}
+            data['email'] = request.data.get('email')
+            data['username'] = request.data.get('username')
+            data['first_name'] = request.data.get('first_name')
+            data['last_name'] = request.data.get('lastname')
+            data['bio'] = request.data.get('bio')
+            serializer = self.get_serializer(user, data=data)
             return Response(serializer.initial_data)
+        
         serializer = self.get_serializer(user, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK) 
 
@@ -230,7 +238,6 @@ def signup(request):
                 }, status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        # return Response({'forbidden': 'нельзя создать пользователя с username = "me"'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # class SignUpViewSet(viewsets.):

@@ -92,7 +92,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
     class Meta:
-        # fields = '__all__'
+
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
@@ -105,27 +105,20 @@ class UserSerializer(serializers.ModelSerializer):
             UniqueTogetherValidator(
                 queryset=User.objects.all(),
                 fields=['username', 'email']
-            ),
+            ), 
         )
-        # def validate_username(self, value):
-        #     if value == '':
-        #         return 
-
-    
-    # def 
-        
-    
-    # def validate_username(self, value):
-    #     if value == 
 
 
 class ConfirmationCodeSerializer(serializers.ModelSerializer):
     username = serializers.CharField(max_length=200, required=False)
-    # email = serializers.EmailField()
+    email = serializers.EmailField()
 
     class Meta:
         fields = ('email', 'username', 'confirmation_code')
         model = User
+        permissions = (
+
+        )
         # validators = (
         #     UniqueTogetherValidator(
         #         queryset=User.objects.all(),
