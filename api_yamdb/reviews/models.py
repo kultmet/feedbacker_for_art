@@ -10,14 +10,15 @@ from users.models import User
 class Genre(models.Model):
     """Модель для работы с жанрами"""
     name = models.CharField(
-        max_length=200,
+        max_length=256,
+        default='drama',
         verbose_name='Название жанра'
     )
     slug = models.SlugField(
+        max_length=50,
         unique=True,
         verbose_name='Конвертер пути',
-        help_text='Введите данные типа slug',
-
+        help_text='Введите данные типа slug'
     )
 
     class Meta:
@@ -25,7 +26,7 @@ class Genre(models.Model):
         verbose_name_plural = 'Жанры'
 
     def __str__(self):
-        return self.title
+        return self.name
 
 
 class Category(models.Model):
@@ -39,13 +40,13 @@ class Category(models.Model):
         verbose_name='Конвертер пути',
         help_text='Введите данные типа slug'
     )
-    
+
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
     def __str__(self):
-        return self.title
+        return self.name
 
 
 class Title(models.Model):
@@ -66,14 +67,14 @@ class Title(models.Model):
         related_name='titles',
         verbose_name='Категория'
     )
-    # genre = models.ForeignKey(
-    #     Genre,
-    #     # through='GenreToTitle',
-    #     on_delete=models.CASCADE,
-    #     related_name='titles',
-    #     verbose_name='Жанр',
-    #     null=True
-    # )
+    genre = models.ForeignKey(
+        Genre,
+        # through='GenreToTitle',
+        on_delete=models.CASCADE,
+        related_name='titles',
+        verbose_name='Жанр',
+        null=True
+    )
     rating = models.IntegerField(
         verbose_name='Рейтинг',
         null=True,
@@ -90,8 +91,8 @@ class Title(models.Model):
 
 class GenreToTitle(models.Model):
     """Модель связывающая произведение с жанром"""
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title_id = models.ForeignKey(Title, on_delete=models.CASCADE)
+    genre_id = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
 
 class Review(models.Model):

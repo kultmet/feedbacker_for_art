@@ -8,7 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 
 # from rest_framework.decorators import api_view, permission_classes
-# from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
 
 from .serializers import (
     CategorySerializer,
@@ -76,6 +76,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с комментариями"""
     serializer_class = CommentSerializer
+    # permission_classes = (AllowAny,)
     # permission_classes = (AuthorOrModeratorOrAdminOrReadOnly,)
     # pagination_class = None
 
@@ -87,7 +88,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
         review = get_object_or_404(Review, id=review_id, title=title_id)
-        serializer.save(author=self.request.user, review=review)
+        serializer.save(author_id=self.request.user, review=review)
 
 
 # Часть Димы
