@@ -57,6 +57,10 @@ class TitleViewSet(viewsets.ModelViewSet):
             return TitleSerializerCreate
         return TitleSerializerRead
 
+    # def perform_create(self, serializer):
+    #     t = 0
+
+
 
 class CategoryViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с категориями"""
@@ -81,6 +85,7 @@ class GenreViewSet(CreateDestroyViewSet):
 # @api_view(['GET'])
 # @permission_classes([AllowAny])
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Вьюсет для работы с отзывами"""
     serializer_class = ReviewSerializer
     # permission_classes = (AuthorOrModeratorOrAdminOrReadOnly,)
 
@@ -96,6 +101,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 # @api_view(['GET'])
 # @permission_classes([AllowAny])
 class CommentViewSet(viewsets.ModelViewSet):
+    """Вьюсет для работы с комментариями"""
     serializer_class = CommentSerializer
     # permission_classes = (AuthorOrModeratorOrAdminOrReadOnly,)
     # pagination_class = None

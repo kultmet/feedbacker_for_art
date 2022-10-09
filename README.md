@@ -57,6 +57,11 @@ pip install -r requirements.txt
 ```
 python manage.py migrate
 ```
+Выполнить загрузку информации в базу данных:
+
+```
+python manage.py fill_database
+```
 
 Запустить проект:
 

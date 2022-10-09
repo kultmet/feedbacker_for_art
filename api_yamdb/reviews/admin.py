@@ -24,9 +24,9 @@ class GenreAdmin(admin.ModelAdmin):
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'title', 'score', 'pub_date', 'text', 'author', )
-    search_fields = ('title', 'score', 'pub_date')
-    list_filter = ('score', 'title', 'pub_date')
+    list_display = ('pk', 'title', 'pub_date', 'text', 'author', ) #'score',
+    search_fields = ('title', 'pub_date')   #'score',
+    list_filter = ('title', 'pub_date') #'score',
     empty_value_display = '-пусто-'
 
 
