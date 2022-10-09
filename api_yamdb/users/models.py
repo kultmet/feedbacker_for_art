@@ -1,3 +1,5 @@
+from asyncio import constants
+from secrets import choice
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 
@@ -11,9 +13,9 @@ from django.contrib.auth.models import AbstractUser, UserManager
 
 class User(AbstractUser):
     CHOICES = (
-    (1, 'user'),
-    (2, 'moderator'),
-    (3, 'admin'),
+    ('user', 'user'),
+    ('moderator', 'moderator'),
+    ('admin', 'admin'),
     )
     username = models.CharField(max_length=200, unique=True)
     email = models.EmailField(
@@ -22,13 +24,19 @@ class User(AbstractUser):
         unique=True
     )
     bio = models.TextField(blank=True, null=True)
-    role = models.PositiveSmallIntegerField(choices=CHOICES, default=1)
+    # role = models.PositiveSmallIntegerField(choices=CHOICES, default=1)
+    role = models.CharField(max_length=15, choices=CHOICES, default='user')
     confirmation_code = models.CharField(max_length=255, blank=True, null=True)
     password = models.CharField(max_length=255, blank=True, null=True)
 
     USERNAME_FIELD = 'username'
-    CONFIRMATION_CODE_FIELD = 'confirmation_code'
-    REQUIRED_FIELDS = [CONFIRMATION_CODE_FIELD]
-    
+    # CONFIRMATION_CODE_FIELD = 'confirmation_code'
+    # REQUIRED_FIELDS = []
+    # constants = [
+
+    # ]
+
+    # def is_admin(self):
+    #     if self.
     def __str__(self) -> str:
         return self.username

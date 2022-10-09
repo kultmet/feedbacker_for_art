@@ -1,5 +1,8 @@
+
+from re import search
 from django.contrib.auth import authenticate, models
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 from rest_framework.exceptions import ValidationError
 from rest_framework.relations import SlugRelatedField
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenObtainSerializer, PasswordField, TokenObtainSlidingSerializer
@@ -84,19 +87,57 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-  
+    username = serializers.CharField(max_length=200)
+    email = serializers.EmailField()
+
+
     class Meta:
+        # fields = '__all__'
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
         model = User
+        lookup_field = 'username'
+        extra_kwargs = {
+            'url': {'lookup_field': 'username',},
+        }
+        validators = (
+            UniqueTogetherValidator(
+                queryset=User.objects.all(),
+                fields=['username', 'email']
+            ),
+        )
+        # def validate_username(self, value):
+        #     if value == '':
+        #         return 
+
+    
+    # def 
+        
+    
+    # def validate_username(self, value):
+    #     if value == 
 
 
 class ConfirmationCodeSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(max_length=200, required=False)
+    # email = serializers.EmailField()
 
     class Meta:
         fields = ('email', 'username', 'confirmation_code')
         model = User
+        # validators = (
+        #     UniqueTogetherValidator(
+        #         queryset=User.objects.all(),
+        #         fields=['username', 'email']
+        #     ),
+            
+        # )
+    def validate_username(self, value):
+            if value == 'me':
+                raise serializers.ValidationError('А username не можеть быть "me"')
+            return value
+
 
 
 class MyObtainSerializer(TokenObtainSerializer):

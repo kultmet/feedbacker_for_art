@@ -1,4 +1,5 @@
 
+from email.policy import default
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
@@ -55,7 +56,8 @@ class Title(models.Model):
     description = models.TextField(
         verbose_name='Описание произведения'
     )
-    year = models.IntegerField()
+    year = models.IntegerField(default=1)# если это поле требует год, то это дотжен быть DateField
+    # если это int и это поле обязательное, значит нужно указать заначение по дефолту
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -69,7 +71,9 @@ class Title(models.Model):
         # through='GenreToTitle',
         on_delete=models.CASCADE,
         related_name='titles',
-        verbose_name='Жанр'
+        verbose_name='Жанр',
+        blank=True,
+        null=True,
     )
 
     class Meta:
@@ -95,6 +99,7 @@ class Review(models.Model):
     pub_date = models.DateTimeField(
         verbose_name='Дата добавления', auto_now_add=True, db_index=True)
     score = models.PositiveSmallIntegerField(
+        default=5,# нужен дефолт если это обязательное поле
         verbose_name='Рейтинг',
         validators=[
             MinValueValidator(1, 'Введите целое число от 1 до 10'),
