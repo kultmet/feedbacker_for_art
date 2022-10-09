@@ -1,9 +1,11 @@
-from rest_framework import viewsets, permissions, mixins, status, filters
-from rest_framework.generics import get_object_or_404
 
-from rest_framework.decorators import api_view
+from rest_framework import viewsets, permissions, mixins, status, filters, views
+from rest_framework.generics import get_object_or_404
+# from rest_framework.routers
+from rest_framework import filters
+
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
 
@@ -20,15 +22,12 @@ from .serializers import (
     UserSerializer,
     ConfirmationCodeSerializer,
     # get_token_for_user,
-    MyTokenObtainPairSerializer,
-    MyObtainSerializer,
-    TokenSerializer,
-    Fuck
 )
 from reviews.models import Category, Genre, Title, Review, Comment
 from users.models import User
 from .utility import generate_confirmation_code, send_email_with_verification_code
-# from .permissions import AuthorOrModeratorOrAdminOrReadOnly
+
+# from .permissions import AuthorOrModeratorOrAdminOrReadOnly, IsAdminOrSuperuserPermission
 from .permissions import IsAdminOrReadOnly
 
 
@@ -123,13 +122,57 @@ class CommentViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
-    permission_classes = (permissions.IsAdminUser,)
+    # permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (IsAdminOrSuperuserPermission,)
+    lookup_field = 'username'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+
+# это нужно будет обработать
+    @action(
+        detail=False,
+        url_path='me',
+        methods=['get', 'patch'],
+        permission_classes=[permissions.IsAuthenticated,],
+        queryset = User.objects.all()
+    )
+    def my(self, request):
+
+        user = User.objects.get(id=request.user.id)
+
+        if request.method == 'PATCH':
+            if request.user.role == 'admin':
+                serializer = self.get_serializer(user, data=request.data)
+                return Response(serializer.initial_data)
+            print(request.user.role)
+            data = {}
+            data['email'] = request.data.get('email')
+            data['username'] = request.data.get('username')
+            data['first_name'] = request.data.get('first_name')
+            data['last_name'] = request.data.get('lastname')
+            data['bio'] = request.data.get('bio')
+            serializer = self.get_serializer(user, data=data)
+            return Response(serializer.initial_data)
+        
+        serializer = self.get_serializer(user, many=False)
+        return Response(serializer.data, status=status.HTTP_200_OK) 
+
+
     
+class ProfileViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    serializer_class = UserSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get_queryset(self):
+        return User.objects.get(id=self.request.user.id)
 
 @api_view(['GET', 'PATCH'])
 def user_me(request):
     if request.method == 'PATCH':
-        print()
         user = get_object_or_404(User, pk=request.user.pk)
         serializer = UserSerializer(user, data=request.data)
         if serializer.is_valid():
@@ -142,15 +185,56 @@ def user_me(request):
 
 # Нужно сделат валидацию по полю confirmation_code
 # Нужно перехватить ошибку связаную с тем что юзер не существует
+class SignupView(views.APIView):
+    
+    def post(self, request):
+        data = {}
+        data['email'] = request.data.get('email')
+        data['username'] = request.data.get('username')
+        username = request.data.get('username')
+        email = request.data.get('email')
+        data['confirmation_code'] = generate_confirmation_code()
+        serializer = ConfirmationCodeSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            send_email_with_verification_code(serializer.data)
+            return Response(
+                {
+                    'email': email,
+                    'username': username
+                }, status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        data = {}
+        data['email'] = request.data.get('email')
+        data['username'] = request.data.get('username')
+        username = request.data.get('username')
+        email = request.data.get('email')
+        data['confirmation_code'] = generate_confirmation_code()
+        user = User.objects.get(username=username, email=email)
+        serializer = ConfirmationCodeSerializer(user, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            send_email_with_verification_code(serializer.data)
+            return Response(
+                {
+                    'email': email,
+                    'username': username
+                }, status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['POST', 'PATCH'])
 def signup(request):
     data = {}
-    data['email'] = request.data['email']
-    data['username'] = request.data['username']
-    username = request.data['username']
-    email = request.data['email']
+    data['email'] = request.data.get('email')
+    data['username'] = request.data.get('username')
+    username = request.data.get('username')
+    email = request.data.get('email')
     data['confirmation_code'] = generate_confirmation_code()
-    print(request.data['username'])
+    # print(request.data['username'])
     if request.method == 'PATCH':
         user = User.objects.get(username=username, email=email)
         serializer = ConfirmationCodeSerializer(user, data=data)
@@ -159,27 +243,48 @@ def signup(request):
             send_email_with_verification_code(serializer.data)
             return Response(
                 {
-                    'ready': 
-                    f'Код подтверждения был отправлен вам на почту {email}'
+                    'email': email,
+                    'username': username
                 }, status=status.HTTP_201_CREATED
             )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == 'POST':
+        # if request.data['username'] != 'me':
         serializer = ConfirmationCodeSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             send_email_with_verification_code(serializer.data)
             return Response(
                 {
-                    'ready': 
-                    f'Код подтверждения был отправлен вам на почту {email}'
+                    'email': email,
+                    'username': username
                 }, status=status.HTTP_200_OK
             )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# class SignUpViewSet(viewsets.):
+class SignUpViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    queryset = User.objects.all()
+    serializer_class = ConfirmationCodeSerializer
+
+    def create(self, request, *args, **kwargs):
+        data = {}
+        data['email'] = request.data.get('email')
+        data['username'] = request.data.get('username')
+        username = request.data.get('username')
+        email = request.data.get('email')
+        data['confirmation_code'] = generate_confirmation_code()
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        send_email_with_verification_code(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 @api_view(['POST',])
 def token(request):
-    user = User.objects.get(username=request.data['username'], confirmation_code=request.data['confirmation_code'])
+    user = User.objects.get(username=request.data.get('username'), confirmation_code=request.data.get('confirmation_code'))
   
     token = get_tokens_for_user(user)
     return Response(token)
@@ -191,6 +296,6 @@ def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
 
     return {
-        'refresh': str(refresh),
+        # 'refresh': str(refresh),
         'access': str(refresh.access_token),
     }
