@@ -25,8 +25,8 @@ class GenreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genre
-        # fields = '__all__'
         fields = ('name', 'slug')
+        # exclude = ['id']
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -40,27 +40,19 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        # fields = '__all__'
         fields = ('name', 'slug')
+        # exclude = ['id']
 
 
-class TitleSerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с произведениями"""
-    category = CategorySerializer(many=False, read_only=True)
+class TitleSerializerRead(serializers.ModelSerializer):
+    """Сериализатор для работы с произведениями при чтении"""
+    category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
-    """
-    category = SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all()
-    )
-    genre = SlugRelatedField(
-        slug_field='slug',
-        queryset=Genre.objects.all(),
-        many=True
-    )
+    # score = serializers.SerializerMethodField()
     """
     def get_score(self, obj):
         return Avg('reviews__score')
+    """
 
     """
     def validate(self, data):
@@ -71,8 +63,9 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = '__all__'
-        read_only_fields = ('id',)
+        # fields = '__all__'
+        fields = ('id', 'name', 'description', 'year', 'category', 'genre') # scope
+        # read_only_fields = ('id',)
         # exclude = ('id',)
     """
     def create(self, validated_data):
@@ -85,6 +78,35 @@ class TitleSerializer(serializers.ModelSerializer):
         # title = Title.objects.create(**validated_data)
         # return title
     """
+
+
+class TitleSerializerCreate(serializers.ModelSerializer):
+    """Сериализатор для работы с произведениями при создании"""
+
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug'
+
+        # many=False
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True
+    )
+    """
+    def create(self, validated_data):
+        title = Title(
+            genre=validated_data['genre'],
+            category=validated_data['category']
+        )
+        title.save()
+        return title
+    """
+    class Meta:
+        model = Title
+        # fields = '__all__'
+        fields = ('name', 'description', 'year', 'category', 'genre')
 
 
 class ReviewSerializer(serializers.ModelSerializer):

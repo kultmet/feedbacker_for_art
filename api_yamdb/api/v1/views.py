@@ -13,7 +13,8 @@ from rest_framework.pagination import PageNumberPagination
 from .serializers import (
     CategorySerializer,
     GenreSerializer,
-    TitleSerializer,
+    TitleSerializerRead,
+    TitleSerializerCreate,
     ReviewSerializer,
     CommentSerializer,
     UserSerializer,
@@ -45,11 +46,16 @@ class CreateDestroyViewSet(
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с произведениями"""
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
+    serializer_class = TitleSerializerCreate
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'year', 'genre__slug', 'category__slug']
+
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PATCH', 'DELETE',):
+            return TitleSerializerCreate
+        return TitleSerializerRead
 
 
 class CategoryViewSet(CreateDestroyViewSet):
