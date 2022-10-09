@@ -1,7 +1,3 @@
-
-from os import stat
-from urllib import request, response
-from wsgiref import validate
 from rest_framework import viewsets, permissions, mixins, status, views
 from rest_framework.generics import get_object_or_404
 # from rest_framework.routers
@@ -9,15 +5,7 @@ from rest_framework import filters
 
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
-# from rest_framework.decorators import action
-
-
-
-# from rest_framework.decorators import api_view, permission_classes
-# from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
 
 from .serializers import (
     CategorySerializer,
@@ -28,10 +16,6 @@ from .serializers import (
     UserSerializer,
     ConfirmationCodeSerializer,
     # get_token_for_user,
-    MyTokenObtainPairSerializer,
-    MyObtainSerializer,
-    TokenSerializer,
-    Fuck
 )
 from reviews.models import Category, Genre, Title, Review, Comment
 from users.models import User

@@ -13,7 +13,6 @@ from .views import (
     CommentViewSet,
     UserViewSet,
     user_me,
-    signup,
     SignupView,
     SignUpViewSet,
     token
