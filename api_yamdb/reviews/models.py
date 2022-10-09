@@ -62,7 +62,7 @@ class Title(models.Model):
         verbose_name='Описание произведения'
     )
     year = models.PositiveSmallIntegerField(
-        verbose_name='Год создания произведения'
+        verbose_name='Год создания произведения!'
     )
     category = models.ForeignKey(
         Category,
