@@ -15,6 +15,7 @@ from .views import (
     token
 )
 
+
 app_name = 'api'
 
 v1_router = DefaultRouter()

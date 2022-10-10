@@ -23,6 +23,7 @@ class IsAdminOrSuperuserPermission(permissions.BasePermission):
             return True
         return False
 
+
 class IsModeratorPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user.role == 'moderator':

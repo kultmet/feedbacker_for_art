@@ -266,8 +266,6 @@ def token(request):
     return Response(token)
 
 
-
-
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
 

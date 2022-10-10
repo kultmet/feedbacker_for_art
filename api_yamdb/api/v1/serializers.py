@@ -174,8 +174,6 @@ class MyObtainSerializer(TokenObtainSerializer):
 class MyTokenObtainPairSerializer(MyObtainSerializer):
     token_class = RefreshToken
 
-    
-
     def validate(self, attrs):
         data = super().validate(attrs)
 
@@ -191,7 +189,6 @@ class MyTokenObtainPairSerializer(MyObtainSerializer):
 
 # class MyTokenObtainPairSerializer(serializers.ModelSerializer):
 #     token_class = RefreshToken
-
 
 #     def validate(self, attrs):
 #         data = super().validate(attrs)
