@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions, mixins, status, filters, views
 from rest_framework.generics import get_object_or_404
 # from rest_framework.routers
 from rest_framework import filters
+from django.db.models import Avg
 
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
@@ -45,7 +46,10 @@ class CreateDestroyViewSet(
 # @permission_classes([AllowAny])
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с произведениями"""
-    queryset = Title.objects.all()
+    # queryset = Title.objects.all().annotate(
+    #     rating=Avg('reviews__score')
+    # ).order_by('name')
+    queryset = Title.objects.all().order_by('name')
     serializer_class = TitleSerializerCreate
     permission_classes = (TitleIsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
@@ -60,7 +64,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class CategoryViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с категориями"""
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
@@ -70,7 +74,7 @@ class CategoryViewSet(CreateDestroyViewSet):
 
 class GenreViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с жанрами"""
-    queryset = Genre.objects.all()
+    queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
@@ -113,20 +117,20 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('username')
     # permission_classes = (permissions.IsAdminUser,)
     permission_classes = (IsAdminOrSuperuserPermission,)
     lookup_field = 'username'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
 
-    # это нужно будет обработать
+# это нужно будет обработать
     @action(
         detail=False,
         url_path='me',
         methods=['get', 'patch'],
-        permission_classes=[permissions.IsAuthenticated, ],
-        # queryset = User.objects.get(id=request.user.id)
+        permission_classes=[permissions.IsAuthenticated,],
+        queryset = User.objects.all()
     )
     def my(self, request):
 
