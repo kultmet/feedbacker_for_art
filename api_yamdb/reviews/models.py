@@ -1,3 +1,6 @@
+
+from email.policy import default
+
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
@@ -61,6 +64,7 @@ class Title(models.Model):
     description = models.TextField(
         verbose_name='Описание произведения'
     )
+
     year = models.PositiveSmallIntegerField(
         verbose_name='Год создания произведения'
     )
@@ -78,6 +82,7 @@ class Title(models.Model):
         # on_delete=models.SET_NULL,
         # on_delete=models.CASCADE,
         related_name='titles',
+
         verbose_name='Жанр'
         # blank=True
         # null=True
@@ -124,6 +129,7 @@ class Review(models.Model):
         db_index=True
     )
     score = models.PositiveSmallIntegerField(
+        default=5,# нужен дефолт если это обязательное поле
         verbose_name='Рейтинг',
         validators=[
             MinValueValidator(1, 'Введите целое число от 1 до 10'),
