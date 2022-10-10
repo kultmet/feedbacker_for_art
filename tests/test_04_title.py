@@ -37,6 +37,8 @@ class Test04TitleAPI:
         assert response.status_code == 201, (
             'Проверьте, что при POST запросе `/api/v1/titles/` с правильными данными возвращает статус 201'
         )
+        print(response.content)
+        print(response.json())
         assert type(response.json().get('id')) == int, (
             'Проверьте, что при POST запросе `/api/v1/titles/` возвращаете данные созданного объекта. '
             'Значение `id` нет или не является целым числом.'

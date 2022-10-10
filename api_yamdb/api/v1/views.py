@@ -29,7 +29,7 @@ from users.models import User
 from .utility import generate_confirmation_code, send_email_with_verification_code
 
 # from .permissions import AuthorOrModeratorOrAdminOrReadOnly, IsAdminOrSuperuserPermission
-from .permissions import IsAdminOrReadOnly, IsAdminOrSuperuserPermission
+from .permissions import TitlePermission, ReviewPermission, IsAdminOrSuperuserPermission
 
 
 class CreateDestroyViewSet(
@@ -50,7 +50,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     # ).order_by('name')
     queryset = Title.objects.all().order_by('name')
     serializer_class = TitleSerializerCreate
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (TitlePermission,)
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'year', 'genre__slug', 'category__slug']
@@ -68,7 +68,7 @@ class CategoryViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с категориями"""
     queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (TitlePermission,)
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['slug']
@@ -78,7 +78,7 @@ class GenreViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с жанрами"""
     queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (TitlePermission,)
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['slug']
@@ -89,8 +89,8 @@ class GenreViewSet(CreateDestroyViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с отзывами"""
     serializer_class = ReviewSerializer
-    # permission_classes = (AuthorOrModeratorOrAdminOrReadOnly,)
-    pagination_class = IsAdminOrSuperuserPermission
+    permission_classes = (ReviewPermission,)
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         # title = get_object_or_404(Title, id=self.kwargs['title_id'])
@@ -113,8 +113,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с комментариями"""
     serializer_class = CommentSerializer
-    # permission_classes = (AuthorOrModeratorOrAdminOrReadOnly,)
-    # pagination_class = None
+    permission_classes = (ReviewPermission,)
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         # review = get_object_or_404(Review, id=self.kwargs['review_id'])
