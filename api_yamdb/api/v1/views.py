@@ -1,4 +1,3 @@
-
 from rest_framework import viewsets, permissions, mixins, status, filters, views
 from rest_framework.generics import get_object_or_404
 # from rest_framework.routers
@@ -9,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
 
-# from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
 
 from .serializers import (
@@ -27,7 +26,7 @@ from reviews.models import Category, Genre, Title, Review, Comment
 from users.models import User
 from .utility import generate_confirmation_code, send_email_with_verification_code
 
-# from .permissions import AuthorOrModeratorOrAdminOrReadOnly, IsAdminOrSuperuserPermission
+from .permissions import IsAuthorOrModeratorOrAdminOrReadOnly, IsAdminOrSuperuserPermission
 from .permissions import IsAdminOrReadOnly
 
 
@@ -56,11 +55,9 @@ class TitleViewSet(viewsets.ModelViewSet):
             return TitleSerializerCreate
         return TitleSerializerRead
 
-    # def perform_create(self, serializer):
-    #     t = 0
 
-
-
+# @api_view(['GET'])
+# @permission_classes([AllowAny])
 class CategoryViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с категориями"""
     queryset = Category.objects.all()
@@ -71,6 +68,8 @@ class CategoryViewSet(CreateDestroyViewSet):
     search_fields = ['slug']
 
 
+# @api_view(['GET'])
+# @permission_classes([AllowAny])
 class GenreViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с жанрами"""
     queryset = Genre.objects.all()
@@ -81,12 +80,11 @@ class GenreViewSet(CreateDestroyViewSet):
     search_fields = ['slug']
 
 
-# @api_view(['GET'])
-# @permission_classes([AllowAny])
+
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с отзывами"""
     serializer_class = ReviewSerializer
-    # permission_classes = (AuthorOrModeratorOrAdminOrReadOnly,)
+    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,)
 
     def get_queryset(self):
         print('$$$$$$$$$$$$$$$$')
@@ -95,11 +93,13 @@ class ReviewViewSet(viewsets.ModelViewSet):
         title = get_object_or_404(Title, id=self.kwargs['title_id'])
         print('!!!!!!!!!!!!!!!')
         print(title)
+        # print(self.request.user.role)
         user = self.request.user
         print(self.request)
-        print(self.get_queryset(id='user'))
         print(user)
         print(user.id)
+        print(title.reviews.all())
+        print('###############3')
         return title.reviews.all()
 
     def perform_create(self, serializer):
@@ -114,8 +114,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с комментариями"""
     serializer_class = CommentSerializer
-    # permission_classes = (AllowAny,)
-    # permission_classes = (AuthorOrModeratorOrAdminOrReadOnly,)
+    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly,)
+
     # pagination_class = None
 
     def get_queryset(self):
@@ -140,18 +140,18 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all()
     # permission_classes = (permissions.IsAdminUser,)
-    permission_classes = (IsAdminOrSuperuserPermission,)
+    # permission_classes = (IsAdminOrSuperuserPermission,)
     lookup_field = 'username'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
 
-# это нужно будет обработать
+    # это нужно будет обработать
     @action(
         detail=False,
         url_path='me',
         methods=['get', 'patch'],
-        permission_classes=[permissions.IsAuthenticated,],
-        queryset = User.objects.all()
+        permission_classes=[permissions.IsAuthenticated, ],
+        queryset=User.objects.all()
     )
     def my(self, request):
 
@@ -170,12 +170,11 @@ class UserViewSet(viewsets.ModelViewSet):
             data['bio'] = request.data.get('bio')
             serializer = self.get_serializer(user, data=data)
             return Response(serializer.initial_data)
-        
+
         serializer = self.get_serializer(user, many=False)
-        return Response(serializer.data, status=status.HTTP_200_OK) 
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-    
 class ProfileViewSet(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
@@ -186,6 +185,7 @@ class ProfileViewSet(
 
     def get_queryset(self):
         return User.objects.get(id=self.request.user.id)
+
 
 @api_view(['GET', 'PATCH'])
 def user_me(request):
@@ -200,10 +200,11 @@ def user_me(request):
     serializer = UserSerializer(user)
     return Response(serializer.data)
 
+
 # Нужно сделат валидацию по полю confirmation_code
 # Нужно перехватить ошибку связаную с тем что юзер не существует
 class SignupView(views.APIView):
-    
+
     def post(self, request):
         data = {}
         data['email'] = request.data.get('email')
@@ -242,6 +243,7 @@ class SignupView(views.APIView):
                 }, status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST', 'PATCH'])
 def signup(request):
@@ -299,14 +301,14 @@ class SignUpViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         send_email_with_verification_code(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-@api_view(['POST',])
+
+@api_view(['POST', ])
 def token(request):
-    user = User.objects.get(username=request.data.get('username'), confirmation_code=request.data.get('confirmation_code'))
-  
+    user = User.objects.get(username=request.data.get('username'),
+                            confirmation_code=request.data.get('confirmation_code'))
+
     token = get_tokens_for_user(user)
     return Response(token)
-
-
 
 
 def get_tokens_for_user(user):

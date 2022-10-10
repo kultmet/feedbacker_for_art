@@ -129,7 +129,7 @@ class Review(models.Model):
         db_index=True
     )
     score = models.PositiveSmallIntegerField(
-        default=5,# нужен дефолт если это обязательное поле
+        # default=5,# нужен дефолт если это обязательное поле
         verbose_name='Рейтинг',
         validators=[
             MinValueValidator(1, 'Введите целое число от 1 до 10'),

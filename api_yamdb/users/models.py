@@ -5,11 +5,15 @@ from django.contrib.auth.models import AbstractUser, UserManager
 
 
 class User(AbstractUser):
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+    USER = 'user'
+
     CHOICES = (
 
-    ('user', 'user'),
-    ('moderator', 'moderator'),
-    ('admin', 'admin'),
+        ('user', 'user'),
+        ('moderator', 'moderator'),
+        ('admin', 'admin'),
 
     )
     username = models.CharField(max_length=200, unique=True)
@@ -25,16 +29,23 @@ class User(AbstractUser):
     confirmation_code = models.CharField(max_length=255, blank=True, null=True)
     password = models.CharField(max_length=255, blank=True, null=True)
 
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN
+
     USERNAME_FIELD = 'username'
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                name="uniqe_constraint",
-                fields=['uaername', 'email'],
+                name="unique_constraint",
+                fields=['username', 'email'],
             ),
         ]
-
 
     def __str__(self) -> str:
         return self.username

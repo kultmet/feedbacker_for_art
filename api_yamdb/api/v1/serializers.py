@@ -1,6 +1,6 @@
-
 from re import search
 from django.contrib.auth import authenticate, models
+from django.shortcuts import get_object_or_404
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
@@ -11,7 +11,8 @@ from rest_framework import serializers, status
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.relations import SlugRelatedField
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenObtainSerializer, PasswordField, TokenObtainSlidingSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenObtainSerializer, PasswordField, \
+    TokenObtainSlidingSerializer
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
@@ -71,9 +72,10 @@ class TitleSerializerRead(serializers.ModelSerializer):
     class Meta:
         model = Title
         # fields = '__all__'
-        fields = ('id', 'name', 'description', 'year', 'category', 'genre') # scope
+        fields = ('id', 'name', 'description', 'year', 'category', 'genre')  # scope
         # read_only_fields = ('id',)
         # exclude = ('id',)
+
     """
     def create(self, validated_data):
         return Title.objects.create(
@@ -108,6 +110,7 @@ class TitleSerializerCreate(serializers.ModelSerializer):
         title.save()
         return title
     """
+
     class Meta:
         model = Title
         # fields = '__all__'
@@ -136,12 +139,14 @@ class ReviewSerializer(serializers.ModelSerializer):
         request = self.context['request']
         author = request.user
         title_id = self.context['view'].kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
         if request.method == 'POST':
-            if Review.objects.filter(title=title_id, author=author).exists():
+            if Review.objects.filter(title=title, author=author).exists():
                 raise ValidationError(
                     'Отзыв можно оставить один раз!'
                 )
         return data
+
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор для работы с отзывами"""
@@ -160,30 +165,28 @@ class CommentSerializer(serializers.ModelSerializer):
                   'author',
                   'pub_date')
 
-# Дима
 
+# Дима
 
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(max_length=200)
     email = serializers.EmailField()
 
-
     class Meta:
-
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role'
         )
         model = User
         lookup_field = 'username'
         extra_kwargs = {
-            'url': {'lookup_field': 'username',},
+            'url': {'lookup_field': 'username', },
         }
         validators = (
             UniqueTogetherValidator(
                 queryset=User.objects.all(),
                 fields=['username', 'email']
-            ), 
+            ),
         )
 
 
@@ -202,17 +205,16 @@ class ConfirmationCodeSerializer(serializers.ModelSerializer):
         #         queryset=User.objects.all(),
         #         fields=['username', 'email']
         #     ),
-            
-        # )
-    def validate_username(self, value):
-            if value == 'me':
-                raise serializers.ValidationError('А username не можеть быть "me"')
-            return value
 
+        # )
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError('А username не может быть "me"')
+        return value
 
 
 class MyObtainSerializer(TokenObtainSerializer):
-
     username_field = User().USERNAME_FIELD
     token_class = None
 
@@ -222,8 +224,7 @@ class MyObtainSerializer(TokenObtainSerializer):
 
     # class Meta:
     #     fields = ('username', 'confirmation_code')
-        # extra_kwargs = {'password': {'required': False}}
-
+    # extra_kwargs = {'password': {'required': False}}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -248,8 +249,6 @@ class MyObtainSerializer(TokenObtainSerializer):
 class MyTokenObtainPairSerializer(MyObtainSerializer):
     token_class = RefreshToken
 
-    
-
     def validate(self, attrs):
         data = super().validate(attrs)
 
@@ -262,6 +261,7 @@ class MyTokenObtainPairSerializer(MyObtainSerializer):
             models.update_last_login(None, self.user)
 
         return data
+
 
 # class MyTokenObtainPairSerializer(serializers.ModelSerializer):
 #     token_class = RefreshToken
@@ -284,36 +284,40 @@ def get_token_for_user(user):
 
     return {'refresh': str(refresh), 'access': str(refresh.access_token)}
 
+
 class MyTok(TokenObtainSlidingSerializer):
     pass
+
 
 class TokenSerializer(serializers.ModelSerializer):
     access_token = AccessToken()
     access = serializers.SerializerMethodField()
     token = serializers.SerializerMethodField()
     token_class = None
-    
+
     class Meta:
         fields = ('username', 'confirmation_code', 'access', 'token')
         read_only_fields = ('access',)
         model = User
-    
+
     def get_access(self, obj):
         print(self.access_token)
         return str(self.access_token)
-    
+
     # @classmethod
     # def get_token(cls, user):
     #     return cls.token_class.for_user(user)
 
+
 class Fuck(TokenObtainPairSerializer):
     username_field = User.USERNAME_FIELD
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.fields[self.username_field] = serializers.CharField()
         self.fields["confirmation_code"] = serializers.CharField()
-    
+
     def validate(self, attrs):
         print(attrs)
         return super().validate(attrs)

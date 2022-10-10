@@ -15,7 +15,7 @@ from .views import (
     user_me,
     SignupView,
     SignUpViewSet,
-    token
+    token, signup
 )
 
 app_name = 'api'
@@ -32,7 +32,7 @@ v1_router.register(r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comment
                    CommentViewSet,
                    basename='comments')
 v1_router.register(r'users', UserViewSet, basename='users')
-v1_router.register(r'auth/signup', SignUpViewSet)
+# v1_router.register(r'auth/signup', SignUpViewSet)
 # v1_router.register(r'users/me/', ProfileViewSet, basename='me')
 # v1_router.register(r'users/me', ProfileViewSet, basename='profile')
 
