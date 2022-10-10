@@ -1,5 +1,3 @@
-from asyncio import constants
-from secrets import choice
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 
@@ -31,7 +29,7 @@ class User(AbstractUser):
         constraints = [
             models.UniqueConstraint(
                 name="uniqe_constraint",
-                fields=['uaername', 'email'],
+                fields=['username', 'email'],
             ),
         ]
 

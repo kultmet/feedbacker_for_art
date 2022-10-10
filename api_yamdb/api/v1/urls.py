@@ -15,7 +15,8 @@ from .views import (
     user_me,
     SignupView,
     SignUpViewSet,
-    token
+    token,
+    signup
 )
 
 app_name = 'api'
@@ -43,7 +44,7 @@ urlpatterns = [
     # path('auth/signup/', signup, name='signup'),
     # path('auth/signup/', SignUpViewSet),
     # path('auth/signup/', SignupView.as_view(), name='signup'),
-    #path('users/me/', user_me, name='user_me'),
+    # path('users/me/', user_me, name='user_me'),
     path('auth/signup/', signup, name='signup'),
     path('auth/token/', token, name='token'),
 ]

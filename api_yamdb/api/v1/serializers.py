@@ -1,5 +1,3 @@
-
-from re import search
 from django.contrib.auth import authenticate, models
 
 from rest_framework import serializers
@@ -55,12 +53,11 @@ class TitleSerializerRead(serializers.ModelSerializer):
     """Сериализатор для работы с произведениями при чтении"""
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
-    # score = serializers.SerializerMethodField()
-    """
-    def get_score(self, obj):
+    rating = serializers.SerializerMethodField()
+    """"
+    def get_rating(self, obj):
         return Avg('reviews__score')
     """
-
     """
     def validate(self, data):
         if data == {}:
@@ -71,9 +68,13 @@ class TitleSerializerRead(serializers.ModelSerializer):
     class Meta:
         model = Title
         # fields = '__all__'
-        fields = ('id', 'name', 'description', 'year', 'category', 'genre') # scope
-        # read_only_fields = ('id',)
+        fields = ('id', 'name', 'description', 'year', 'category', 'genre', 'rating')
+        read_only_fields = ('id',)
         # exclude = ('id',)
+
+    def get_rating(self, obj):
+        obj = obj.reviews.all().aggregate(rating=Avg('score'))
+        return obj['rating']
     """
     def create(self, validated_data):
         return Title.objects.create(
@@ -122,6 +123,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     title = serializers.SlugRelatedField(
         slug_field='name', read_only=True
     )
+    score = serializers.IntegerField()
 
     class Meta:
         model = Review

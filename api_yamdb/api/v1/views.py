@@ -3,6 +3,7 @@ from rest_framework import viewsets, permissions, mixins, status, filters, views
 from rest_framework.generics import get_object_or_404
 # from rest_framework.routers
 from rest_framework import filters
+from django.db.models import Avg
 
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
@@ -28,7 +29,7 @@ from users.models import User
 from .utility import generate_confirmation_code, send_email_with_verification_code
 
 # from .permissions import AuthorOrModeratorOrAdminOrReadOnly, IsAdminOrSuperuserPermission
-from .permissions import IsAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsAdminOrSuperuserPermission
 
 
 class CreateDestroyViewSet(
@@ -44,7 +45,10 @@ class CreateDestroyViewSet(
 # @permission_classes([AllowAny])
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с произведениями"""
-    queryset = Title.objects.all()
+    # queryset = Title.objects.all().annotate(
+    #     rating=Avg('reviews__score')
+    # ).order_by('name')
+    queryset = Title.objects.all().order_by('name')
     serializer_class = TitleSerializerCreate
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
@@ -60,10 +64,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     #     t = 0
 
 
-
 class CategoryViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с категориями"""
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
@@ -73,7 +76,7 @@ class CategoryViewSet(CreateDestroyViewSet):
 
 class GenreViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с жанрами"""
-    queryset = Genre.objects.all()
+    queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
     pagination_class = PageNumberPagination
@@ -87,14 +90,22 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с отзывами"""
     serializer_class = ReviewSerializer
     # permission_classes = (AuthorOrModeratorOrAdminOrReadOnly,)
+    pagination_class = IsAdminOrSuperuserPermission
 
     def get_queryset(self):
-        title = get_object_or_404(Title, id=self.kwargs['title_id'])
+        # title = get_object_or_404(Title, id=self.kwargs['title_id'])
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         return title.reviews.all()
+        # title_id = self.kwargs.get('title_id')
+        # return Review.objects.filter(title=title_id)
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, id=self.kwargs['title_id'])
-        serializer.save(author=self.request.user, title=title)
+        # title = get_object_or_404(Title, id=self.kwargs['title_id'])
+        # serializer.save(author=self.request.user, title=title)
+        title_id = self.kwargs.get('title_id')
+        serializer.save(author=self.request.user, title=title_id)
+        # title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
+        # serializer.save(author=self.request.user, title=title)
 
 
 # @api_view(['GET'])
@@ -106,7 +117,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     # pagination_class = None
 
     def get_queryset(self):
-        review = get_object_or_404(Review, id=self.kwargs['review_id'])
+        # review = get_object_or_404(Review, id=self.kwargs['review_id'])
+        title_id = self.kwargs.get('title_id')
+        review_id = self.kwargs.get('review_id')
+        review = get_object_or_404(Review, id=review_id, title=title_id)
         return review.comments.all()
 
     def perform_create(self, serializer):
@@ -115,13 +129,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         review = get_object_or_404(Review, id=review_id, title=title_id)
         serializer.save(author=self.request.user, review=review)
 
-
 # Часть Димы
 
 
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('username')
     # permission_classes = (permissions.IsAdminUser,)
     permission_classes = (IsAdminOrSuperuserPermission,)
     lookup_field = 'username'
