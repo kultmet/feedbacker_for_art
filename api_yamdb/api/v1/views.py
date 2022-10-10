@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 from urllib import request
 from rest_framework import viewsets, permissions, mixins, status, views
+=======
+
+from rest_framework import viewsets, permissions, mixins, status, filters, views
+>>>>>>> 4962caf9f03916a5a12178ef2b989b31c722224a
 from rest_framework.generics import get_object_or_404
 # from rest_framework.routers
 from rest_framework import filters
@@ -7,11 +12,16 @@ from rest_framework import filters
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.pagination import PageNumberPagination
+
+# from rest_framework.decorators import api_view, permission_classes
+# from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
 
 from .serializers import (
     CategorySerializer,
     GenreSerializer,
-    TitleSerializer,
+    TitleSerializerRead,
+    TitleSerializerCreate,
     ReviewSerializer,
     CommentSerializer,
     ConfirmationCodeSerializer,
@@ -21,7 +31,18 @@ from .serializers import (
 from reviews.models import Category, Genre, Title, Review, Comment
 from users.models import User
 from .utility import generate_confirmation_code, send_email_with_verification_code
-from .permissions import IsAdminOrSuperuserPermission#,# IsadminForMePagePermission #AuthorOrModeratorOrAdminOrReadOnly
+
+# from .permissions import AuthorOrModeratorOrAdminOrReadOnly, IsAdminOrSuperuserPermission
+from .permissions import IsAdminOrReadOnly
+
+
+class CreateDestroyViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    pass
 
 
 # @api_view(['GET'])
@@ -29,25 +50,46 @@ from .permissions import IsAdminOrSuperuserPermission#,# IsadminForMePagePermiss
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с произведениями"""
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
-    # permission_classes = (IsAdminUser,)
+    serializer_class = TitleSerializerCreate
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'year', 'genre__slug', 'category__slug']
+
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PATCH', 'DELETE',):
+            return TitleSerializerCreate
+        return TitleSerializerRead
+
+    # def perform_create(self, serializer):
+    #     t = 0
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+
+class CategoryViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с категориями"""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['slug']
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с жанрами"""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    pagination_class = PageNumberPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['slug']
 
 
 # @api_view(['GET'])
 # @permission_classes([AllowAny])
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Вьюсет для работы с отзывами"""
     serializer_class = ReviewSerializer
     # permission_classes = (AuthorOrModeratorOrAdminOrReadOnly,)
 
@@ -63,6 +105,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 # @api_view(['GET'])
 # @permission_classes([AllowAny])
 class CommentViewSet(viewsets.ModelViewSet):
+    """Вьюсет для работы с комментариями"""
     serializer_class = CommentSerializer
     # permission_classes = (AuthorOrModeratorOrAdminOrReadOnly,)
     # pagination_class = None
