@@ -1,10 +1,6 @@
-<<<<<<< HEAD
-from urllib import request
-from rest_framework import viewsets, permissions, mixins, status, views
-=======
 
 from rest_framework import viewsets, permissions, mixins, status, filters, views
->>>>>>> 4962caf9f03916a5a12178ef2b989b31c722224a
+
 from rest_framework.generics import get_object_or_404
 # from rest_framework.routers
 from rest_framework import filters

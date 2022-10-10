@@ -22,7 +22,6 @@ from reviews.models import (
 from users.models import User
 from .permissions import IsAdminOrSuperuserPermission
 
-
 class GenreSerializer(serializers.ModelSerializer):
     """Сериализатор для работы с жанрами"""
     """"
