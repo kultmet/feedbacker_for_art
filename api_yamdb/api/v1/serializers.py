@@ -1,4 +1,5 @@
 
+from asyncore import write
 from re import search
 from django.contrib.auth import authenticate, models
 from rest_framework import serializers
@@ -13,6 +14,7 @@ from reviews.models import (
     Review, Comment, Title, Category, Genre
 )
 from users.models import User
+from .permissions import IsAdminOrSuperuserPermission
 
 
 
@@ -87,9 +89,9 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(max_length=200)
-    email = serializers.EmailField()
-
+    username = serializers.CharField(max_length=200, validators=[UniqueValidator(queryset=User.objects.all())])
+    email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())])
+    # role = serializers.CharField(max_length=15)
 
     class Meta:
 
@@ -107,30 +109,32 @@ class UserSerializer(serializers.ModelSerializer):
                 fields=['username', 'email']
             ), 
         )
-
-
-class ConfirmationCodeSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(max_length=200, required=False)
-    email = serializers.EmailField()
-
-    class Meta:
-        fields = ('email', 'username', 'confirmation_code')
-        model = User
-        permissions = (
-
-        )
-        # validators = (
-        #     UniqueTogetherValidator(
-        #         queryset=User.objects.all(),
-        #         fields=['username', 'email']
-        #     ),
-            
-        # )
+    
     def validate_username(self, value):
             if value == 'me':
                 raise serializers.ValidationError('А username не можеть быть "me"')
             return value
 
+
+class ConfirmationCodeSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(max_length=200, validators=[UniqueValidator(queryset=User.objects.all())])
+    email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())])
+    confirmation_code = serializers.CharField(max_length=255, write_only=True)
+
+    class Meta:
+        fields = ('email', 'username', 'confirmation_code')
+        model = User
+        validators = (
+            UniqueTogetherValidator(
+                queryset=User.objects.all(),
+                fields=['username', 'email']
+            ),
+        )
+
+    def validate_username(self, value):
+            if value == 'me':
+                raise serializers.ValidationError('А username не можеть быть "me"')
+            return value
 
 
 class MyObtainSerializer(TokenObtainSerializer):
