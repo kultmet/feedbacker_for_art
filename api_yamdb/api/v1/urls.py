@@ -1,6 +1,3 @@
-from cProfile import Profile
-from macpath import basename
-from site import venv
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
@@ -18,6 +15,7 @@ from .views import (
     token, signup
 )
 
+
 app_name = 'api'
 
 v1_router = DefaultRouter()
@@ -32,7 +30,7 @@ v1_router.register(r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comment
                    CommentViewSet,
                    basename='comments')
 v1_router.register(r'users', UserViewSet, basename='users')
-# v1_router.register(r'auth/signup', SignUpViewSet)
+v1_router.register(r'auth/signup', SignUpViewSet)
 # v1_router.register(r'users/me/', ProfileViewSet, basename='me')
 # v1_router.register(r'users/me', ProfileViewSet, basename='profile')
 
@@ -44,6 +42,6 @@ urlpatterns = [
     # path('auth/signup/', SignUpViewSet),
     # path('auth/signup/', SignupView.as_view(), name='signup'),
     #path('users/me/', user_me, name='user_me'),
-    path('auth/signup/', signup, name='signup'),
+    # path('auth/signup/', signup, name='signup'),
     path('auth/token/', token, name='token'),
 ]
