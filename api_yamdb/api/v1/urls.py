@@ -1,6 +1,3 @@
-from cProfile import Profile
-from macpath import basename
-from site import venv
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
@@ -17,6 +14,7 @@ from .views import (
     SignUpViewSet,
     token
 )
+
 
 app_name = 'api'
 

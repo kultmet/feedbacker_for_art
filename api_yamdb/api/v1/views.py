@@ -1,5 +1,6 @@
 
 from rest_framework import viewsets, permissions, mixins, status, filters, views
+
 from rest_framework.generics import get_object_or_404
 # from rest_framework.routers
 from rest_framework import filters
@@ -19,8 +20,8 @@ from .serializers import (
     TitleSerializerCreate,
     ReviewSerializer,
     CommentSerializer,
-    UserSerializer,
     ConfirmationCodeSerializer,
+    UserSerializer,
     # get_token_for_user,
 )
 from reviews.models import Category, Genre, Title, Review, Comment
@@ -120,6 +121,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+
     serializer_class = UserSerializer
     queryset = User.objects.all()
     # permission_classes = (permissions.IsAdminUser,)
@@ -128,31 +130,24 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
 
+    
 # это нужно будет обработать
     @action(
         detail=False,
         url_path='me',
         methods=['get', 'patch'],
         permission_classes=[permissions.IsAuthenticated,],
-        queryset = User.objects.all()
+        # queryset = User.objects.get(id=request.user.id)
     )
     def my(self, request):
 
-        user = User.objects.get(id=request.user.id)
+        user = get_object_or_404(User, id=request.user.id)
 
         if request.method == 'PATCH':
-            if request.user.role == 'admin':
-                serializer = self.get_serializer(user, data=request.data)
-                return Response(serializer.initial_data)
-            print(request.user.role)
-            data = {}
-            data['email'] = request.data.get('email')
-            data['username'] = request.data.get('username')
-            data['first_name'] = request.data.get('first_name')
-            data['last_name'] = request.data.get('lastname')
-            data['bio'] = request.data.get('bio')
-            serializer = self.get_serializer(user, data=data)
-            return Response(serializer.initial_data)
+            serializer = UserSerializer(user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+            return Response(serializer.data)
         
         serializer = self.get_serializer(user, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK) 
@@ -194,7 +189,9 @@ class SignupView(views.APIView):
         username = request.data.get('username')
         email = request.data.get('email')
         data['confirmation_code'] = generate_confirmation_code()
-        serializer = ConfirmationCodeSerializer(data=data)
+        # user = get_object_or_404(User, id=re)
+        # user = User.objects.get(username=username, email=email)
+        serializer = ConfirmationCodeSerializer(user, data=data)
         if serializer.is_valid():
             serializer.save()
             send_email_with_verification_code(serializer.data)
@@ -214,7 +211,7 @@ class SignupView(views.APIView):
         email = request.data.get('email')
         data['confirmation_code'] = generate_confirmation_code()
         user = User.objects.get(username=username, email=email)
-        serializer = ConfirmationCodeSerializer(user, data=data)
+        serializer = ConfirmationCodeSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             send_email_with_verification_code(serializer.data)
@@ -264,7 +261,7 @@ def signup(request):
 
 
 # class SignUpViewSet(viewsets.):
-class SignUpViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+class SignUpViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = ConfirmationCodeSerializer
 
@@ -275,12 +272,30 @@ class SignUpViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         username = request.data.get('username')
         email = request.data.get('email')
         data['confirmation_code'] = generate_confirmation_code()
+        # user = User.objects.get(username=username, email=email)
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        send_email_with_verification_code(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        send_email_with_verification_code(data)
+        try:
+            return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+        except KeyError:
+            Response({'confirmation_code': 'Беда с ключами'}, headers=headers)
+
+    
+    def update(self, request, *args, **kwargs):
+        data = {}
+        data['email'] = request.data.get('email')
+        data['username'] = request.data.get('username')
+        username = request.data.get('username')
+        email = request.data.get('email')
+        data['confirmation_code'] = generate_confirmation_code()
+        user = User.objects.get(username=request.data.get('username'), email=request.data.get('email'))
+        serializer = self.get_serializer(user, data=data)
+        headers = self.get_success_headers(serializer.data)
+        send_email_with_verification_code(data)
+        return Response(serializer.initial_data, status=status.HTTP_200_OK, headers=headers)
 
 @api_view(['POST',])
 def token(request):
@@ -288,8 +303,6 @@ def token(request):
   
     token = get_tokens_for_user(user)
     return Response(token)
-
-
 
 
 def get_tokens_for_user(user):

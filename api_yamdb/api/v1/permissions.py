@@ -19,9 +19,10 @@ class IsAdminOrSuperuserPermission(permissions.BasePermission):
     message = 'Ваши полномочия здесь все...'
 
     def has_permission(self, request, view):
-        if request.user.role == 'admin' or request.user.is_superuser:
+        if request.user.is_authenticated and request.user.role == 'admin' or request.user.is_superuser:
             return True
         return False
+
 
 class IsModeratorPermission(permissions.BasePermission):
     def has_permission(self, request, view):
