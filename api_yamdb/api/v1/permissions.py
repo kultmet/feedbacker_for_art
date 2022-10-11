@@ -25,6 +25,8 @@ class IsAdminOrSuperuserPermission(permissions.BasePermission):
 
 
 class IsModeratorPermission(permissions.BasePermission):
+    message = 'Ваши полномочия здесь все...'
+
     def has_permission(self, request, view):
         if request.user.role == 'moderator':
             return True
@@ -47,7 +49,7 @@ class IsAdminOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
-
-        return request.user == 'admin'
+        
+        return request.user != 'admin'
 
 
