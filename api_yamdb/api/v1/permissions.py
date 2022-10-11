@@ -13,6 +13,8 @@ class IsAdminOrSuperuserPermission(permissions.BasePermission):
 
 
 class IsModeratorPermission(permissions.BasePermission):
+    message = 'Ваши полномочия здесь все...'
+
     def has_permission(self, request, view):
         if request.user.role == 'moderator':
             return True
