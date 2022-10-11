@@ -1,9 +1,8 @@
 from rest_framework import permissions
 
-# Пермишены для моделей юзера
-
 
 class IsAdminOrSuperuserPermission(permissions.BasePermission):
+    """Доступ разрешен только для администратора и Супер юзера"""
     message = 'Ваши полномочия здесь все...'
 
     def has_permission(self, request, view):
@@ -13,6 +12,7 @@ class IsAdminOrSuperuserPermission(permissions.BasePermission):
 
 
 class IsModeratorPermission(permissions.BasePermission):
+    """Доступ разрешен только для Модератора"""
     message = 'Ваши полномочия здесь все...'
 
     def has_permission(self, request, view):
@@ -21,9 +21,9 @@ class IsModeratorPermission(permissions.BasePermission):
         return False
 
 
-# Пермишены для моделей Title, Category, Genre
-
 class TitlePermission(permissions.BasePermission):
+    """Предоставление прав доступа для администратора и супер юзера
+     на добавление и удаление категорий, жанров и произведений"""
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
@@ -43,26 +43,10 @@ class TitlePermission(permissions.BasePermission):
             return True
         return False
 
-    """"
-    def has_permission(self, request, view):
-        return (request.method in permissions.SAFE_METHODS
-                or request.user.is_authenticated
-                or request.user.role == 'admin'
-                or request.user.is_superuser)
-
-    def has_object_permission(self, request, view):
-        return (request.method in permissions.SAFE_METHODS
-                or request.user.is_authenticated
-                or request.user.role == 'admin'
-                or request.user.is_superuser)
-    """
-
-# Пермишены для моделей Review, Comment
-
 
 class ReviewPermission(permissions.BasePermission):
-    """Предоставление прав доступа на изменение отзывов и комментариев
-     для авторов, администратора и модератора"""
+    """Предоставление прав доступа для авторов, администратора и модератора
+    на изменение отзывов и комментариев"""
 
     message = 'Изменение чужого контента запрещено!'
 

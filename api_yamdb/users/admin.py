@@ -1,9 +1,9 @@
 from django.contrib import admin
 
 from .models import User
-# Register your models here.
 
 
+@admin.register(User)
 class AdminUser(admin.ModelAdmin):
     list_display = (
         'pk',
@@ -15,13 +15,3 @@ class AdminUser(admin.ModelAdmin):
         'confirmation_code',
         'password',
     )
-
-# class AdminCode(admin.ModelAdmin):
-#     list_display = (
-#         'pk',
-#         'email',
-#         'user',
-#         'confirmation_code',
-#     )
-    
-admin.site.register(User, AdminUser)
