@@ -173,8 +173,6 @@ class Comment(models.Model):
     )
     text = models.TextField(
         verbose_name='Текст',
-        null=True,
-        blank=True,
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата добавления',

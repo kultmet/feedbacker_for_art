@@ -61,6 +61,15 @@ class TitlePermission(permissions.BasePermission):
 
 
 class ReviewPermission(permissions.BasePermission):
+    """Предоставление прав доступа на изменение отзывов и комментариев
+     для авторов, администратора и модератора"""
+
+    message = 'Изменение чужого контента запрещено!'
+
+    def has_permission(self, request, view):
+        return (request.method in permissions.SAFE_METHODS
+                or request.user.is_authenticated)
+
     def has_object_permission(self, request, view, obj):
         return (request.method in permissions.SAFE_METHODS
                 or request.user.role == 'admin'

@@ -111,6 +111,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с комментариями"""
     serializer_class = CommentSerializer
     permission_classes = (ReviewPermission,)
+    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         review = get_object_or_404(Review, id=self.kwargs['review_id'])
@@ -290,13 +291,13 @@ class TokenViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             user = get_object_or_404(User, username=username)
         except Exception:
             return Response({"not_found": "нет такого"}, status=status.HTTP_404_NOT_FOUND)
-        if request.data.get('confirmation_cade') == user.confirmation_code:
+        if request.data.get('confirmation_code') == user.confirmation_code:
             serializer = self.get_serializer(user, data=request.data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response({'bad_request': 'confirmation_cade invalid',}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'bad_request': 'confirmation_code invalid',}, status=status.HTTP_400_BAD_REQUEST)
 
 
 def get_tokens_for_user(user):
