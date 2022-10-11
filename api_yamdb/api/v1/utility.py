@@ -12,7 +12,7 @@ def send_email_with_verification_code(data):
     confirmation_code = data['confirmation_code']
     message = (
         f'Привет, {username}! Это письмо содержит код подтверждения. Вот он:\n'
-        f'<b>{confirmation_code}</b>.\nЧтоб получить токен, отправте запрос\n'
+        f'<b>{confirmation_code}</b>.\nЧтоб получить токен, отправьте запрос\n'
         'с полями username и confirmation_code на /api/v1/auth/token/.'
     )
     send_mail(subject, message, mailer, recipients)

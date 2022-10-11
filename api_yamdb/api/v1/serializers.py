@@ -1,9 +1,12 @@
 
 from asyncore import write
+from os import access
 from re import search
 from django.contrib.auth import authenticate, models
 
+from rest_framework.generics import get_object_or_404
 from rest_framework import serializers
+from rest_framework import exceptions
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 
 from django.db.models import Avg
@@ -14,22 +17,15 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.relations import SlugRelatedField
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenObtainSerializer, PasswordField, TokenObtainSlidingSerializer
 from rest_framework_simplejwt.settings import api_settings
-from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import (
     Review, Comment, Title, Category, Genre
 )
 from users.models import User
-from .permissions import IsAdminOrSuperuserPermission
+
 
 class GenreSerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с жанрами"""
-    """"
-    def validate(self, data):
-        if data == {}:
-            raise serializers.ValidationError
-        return data
-    """
 
     class Meta:
         model = Genre
@@ -38,13 +34,6 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с категориями"""
-    """
-    def validate(self, data):
-        if data == {}:
-            raise serializers.ValidationError
-        return data
-    """
 
     class Meta:
         model = Category
@@ -56,36 +45,18 @@ class TitleSerializerRead(serializers.ModelSerializer):
     """Сериализатор для работы с произведениями при чтении"""
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
-    # score = serializers.SerializerMethodField()
-    """
-    def get_score(self, obj):
-        return Avg('reviews__score')
-    """
-
-    """
-    def validate(self, data):
-        if data == {}:
-            raise serializers.ValidationError
-        return data
-    """
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
         # fields = '__all__'
-        fields = ('id', 'name', 'description', 'year', 'category', 'genre') # scope
-        # read_only_fields = ('id',)
+        fields = ('id', 'name', 'description', 'year', 'category', 'genre', 'rating')
+        read_only_fields = ('id',)
         # exclude = ('id',)
-    """
-    def create(self, validated_data):
-        return Title.objects.create(
-            genre=validated_data['genre'],
-            category=validated_data['category']
-        )
-        # genre = validated_data.pop('genre')
-        # category = validated_data.pop('category')
-        # title = Title.objects.create(**validated_data)
-        # return title
-    """
+
+    def get_rating(self, obj):
+        obj = obj.reviews.all().aggregate(rating=Avg('score'))
+        return obj['rating']
 
 
 class TitleSerializerCreate(serializers.ModelSerializer):
@@ -111,8 +82,8 @@ class TitleSerializerCreate(serializers.ModelSerializer):
     """
     class Meta:
         model = Title
-        # fields = '__all__'
-        fields = ('name', 'description', 'year', 'category', 'genre')
+        fields = '__all__'
+        # fields = ('name', 'description', 'year', 'category', 'genre')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -123,6 +94,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     title = serializers.SlugRelatedField(
         slug_field='name', read_only=True
     )
+    # score = serializers.IntegerField()
 
     class Meta:
         model = Review
@@ -137,12 +109,14 @@ class ReviewSerializer(serializers.ModelSerializer):
         request = self.context['request']
         author = request.user
         title_id = self.context['view'].kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
         if request.method == 'POST':
-            if Review.objects.filter(title=title_id, author=author).exists():
+            if Review.objects.filter(title=title, author=author).exists():
                 raise ValidationError(
                     'Отзыв можно оставить один раз!'
                 )
         return data
+
 
 class CommentSerializer(serializers.ModelSerializer):
     """Сериализатор для работы с отзывами"""
@@ -163,9 +137,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 # Дима
 
-
-
-class UserSerializer(serializers.ModelSerializer):
+class AdminUserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(max_length=200, validators=[UniqueValidator(queryset=User.objects.all())])
     email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())])
     # role = serializers.CharField(max_length=15)
@@ -193,6 +165,36 @@ class UserSerializer(serializers.ModelSerializer):
             return value
 
 
+class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(max_length=200, validators=[UniqueValidator(queryset=User.objects.all())])
+    email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())])
+    role = serializers.CharField(max_length=15, read_only=True)
+
+    class Meta:
+
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role'
+        )
+        model = User
+        lookup_field = 'username'
+        extra_kwargs = {
+            'url': {'lookup_field': 'username',},
+        }
+        validators = (
+            UniqueTogetherValidator(
+                queryset=User.objects.all(),
+                fields=['username', 'email']
+            ),
+        )
+
+    def validate_username(self, value):
+            if value == 'me':
+                raise serializers.ValidationError('А username не можеть быть "me"')
+            return value
+
+
+
+
 class ConfirmationCodeSerializer(serializers.ModelSerializer):
     username = serializers.CharField(max_length=200, validators=[UniqueValidator(queryset=User.objects.all())])
     email = serializers.EmailField(validators=[UniqueValidator(queryset=User.objects.all())])
@@ -212,6 +214,75 @@ class ConfirmationCodeSerializer(serializers.ModelSerializer):
             if value == 'me':
                 raise serializers.ValidationError('А username не можеть быть "me"')
             return value
+
+
+
+class TokenSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        max_length=250,
+        validators=[UniqueValidator(queryset=User.objects.all())],
+        write_only=True,
+    )
+    confirmation_code = serializers.CharField(
+        max_length=255, write_only=True
+    )
+    access = serializers.SerializerMethodField(method_name='get_access',)
+
+    class Meta:
+        fields = ('username', 'confirmation_code', 'access')
+        model = User
+
+        # validators = (
+        #     UniqueTogetherValidator(
+        #         queryset=User.objects.all(),
+        #         fields=['username', 'confirmation_code']
+        #     ),
+        # )
+
+    def get_access(self, obj):
+        refresh = RefreshToken.for_user(obj)
+        # return {
+        #     # 'refresh': str(refresh),
+        #     'access': str(refresh.access_token),
+        # }
+        return str(refresh.access_token)
+
+    def validate_username(self, value):
+            if value == '':
+                raise serializers.ValidationError('А username не можеть быть пустым')
+            if value not in User.objects.all():
+                return exceptions.NotFound('Not found')
+            if type(value) is not str:
+                return serializers.ValidationError('Не строка')
+            return value
+
+    def validate_confirmation_vode(self, value):
+            if value == '':
+                raise serializers.ValidationError('А confirmation_code не можеть быть пустым')
+            if not value:
+                raise serializers.ValidationError('А confirmation_code не можеть not value')
+            if type(value) is not str:
+                return serializers.ValidationError('Не строка')
+            # elif value not in User.objects.all():
+            #     raise serializers.ValidationError('Такого пользователя нет.')
+            return value
+
+    # def validate(self, attrs):
+    #     authenticate_kwargs = {
+    #         'username': attrs['username'],
+    #         "confirmation_code": attrs["confirmation_code"],
+    #     }
+    #     try:
+    #         authenticate_kwargs["request"] = self.context["request"]
+    #     except KeyError:
+    #         pass
+
+    #     self.user = authenticate(**authenticate_kwargs)
+
+    #     if not  self.user not in User.objects.all():
+    #         return {'not': 'found'}
+
+    #     return {}
 
 
 class MyObtainSerializer(TokenObtainSerializer):
@@ -264,21 +335,7 @@ class MyTokenObtainPairSerializer(MyObtainSerializer):
 
         return data
 
-# class MyTokenObtainPairSerializer(serializers.ModelSerializer):
-#     token_class = RefreshToken
 
-#     def validate(self, attrs):
-#         data = super().validate(attrs)
-
-#         refresh = self.get_token(self.user)
-
-#         data["refresh"] = str(refresh)
-#         data["access"] = str(refresh.access_token)
-
-#         if api_settings.UPDATE_LAST_LOGIN:
-#             models.update_last_login(None, self.user)
-
-#         return data
 def get_token_for_user(user):
     refresh = RefreshToken(user)
 
@@ -287,20 +344,20 @@ def get_token_for_user(user):
 class MyTok(TokenObtainSlidingSerializer):
     pass
 
-class TokenSerializer(serializers.ModelSerializer):
-    access_token = AccessToken()
-    access = serializers.SerializerMethodField()
-    token = serializers.SerializerMethodField()
-    token_class = None
+# class TokenSerializer(serializers.ModelSerializer):
+#     access_token = AccessToken()
+#     access = serializers.SerializerMethodField()
+#     token = serializers.SerializerMethodField()
+#     token_class = None
     
-    class Meta:
-        fields = ('username', 'confirmation_code', 'access', 'token')
-        read_only_fields = ('access',)
-        model = User
+#     class Meta:
+#         fields = ('username', 'confirmation_code', 'access', 'token')
+#         read_only_fields = ('access',)
+#         model = User
     
-    def get_access(self, obj):
-        print(self.access_token)
-        return str(self.access_token)
+#     def get_access(self, obj):
+#         print(self.access_token)
+#         return str(self.access_token)
     
     # @classmethod
     # def get_token(cls, user):

@@ -76,6 +76,7 @@ class Title(models.Model):
         related_name='titles',
         verbose_name='Категория'
     )
+    """"
     genre = models.ManyToManyField(
         Genre,
         # through='GenreToTitle',
@@ -87,10 +88,15 @@ class Title(models.Model):
         # blank=True
         # null=True
     )
-    #rating = models.IntegerField(
-     #   verbose_name='Рейтинг',
-      #  null=True,
-       # default=None)
+    """
+    genre = models.ManyToManyField(
+        Genre,
+        through='GenreToTitle',
+        # related_name='titles',
+        # verbose_name='Жанр'
+        # blank=True
+        # null=True
+    )
 
     class Meta:
         verbose_name = 'Произведение'
@@ -104,6 +110,9 @@ class GenreToTitle(models.Model):
     """Модель связывающая произведение с жанром"""
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.title} {self.genre}'
 
 
 class Review(models.Model):
@@ -129,15 +138,11 @@ class Review(models.Model):
         db_index=True
     )
     score = models.PositiveSmallIntegerField(
-        default=5,# нужен дефолт если это обязательное поле
         verbose_name='Рейтинг',
         validators=[
             MinValueValidator(1, 'Введите целое число от 1 до 10'),
             MaxValueValidator(10, 'Введите целое число от 1 до 10')
         ],
-        default=0,
-        null=True,
-        blank=True,
     )
 
     class Meta:
@@ -168,8 +173,6 @@ class Comment(models.Model):
     )
     text = models.TextField(
         verbose_name='Текст',
-        null=True,
-        blank=True,
     )
     pub_date = models.DateTimeField(
         verbose_name='Дата добавления',
