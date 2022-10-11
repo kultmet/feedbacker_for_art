@@ -14,7 +14,7 @@ class Genre(models.Model):
     """Модель для работы с жанрами"""
     name = models.CharField(
         max_length=256,
-        default='--Пусто--',
+        # default='--Пусто--',
         verbose_name='Название жанра'
     )
     slug = models.SlugField(
@@ -22,7 +22,6 @@ class Genre(models.Model):
         unique=True,
         verbose_name='Конвертер пути',
         help_text='Введите данные типа slug',
-
     )
 
     class Meta:

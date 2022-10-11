@@ -38,7 +38,6 @@ from reviews.models import Category, Genre, Title, Review, Comment
 from .filters import TitleFilter
 from users.models import User
 from .utility import generate_confirmation_code, send_email_with_verification_code
-
 from .permissions import (
                           IsAdminOrSuperuserPermission,
                           # IsAdminOrReadOnly,
@@ -78,20 +77,18 @@ class CategoryViewSet(CreateDestroyViewSet):
     queryset = Category.objects.all().order_by('name')
     serializer_class = CategorySerializer
     permission_classes = (TitlePermission,)
-    pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
-
+    lookup_field = 'slug'
 
 class GenreViewSet(CreateDestroyViewSet):
     """Вьюсет для работы с жанрами"""
     queryset = Genre.objects.all().order_by('name')
     serializer_class = GenreSerializer
     permission_classes = (TitlePermission,)
-    pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
-
+    lookup_field = 'slug'
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с отзывами"""
