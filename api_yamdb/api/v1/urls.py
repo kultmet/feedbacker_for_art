@@ -1,6 +1,3 @@
-from cProfile import Profile
-from macpath import basename
-from site import venv
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
@@ -12,11 +9,8 @@ from .views import (
     CommentViewSet,
     TokenViewSet,
     UserViewSet,
-    SignUpViewSet,
-    token,
-    signup
+    SignUpViewSet
 )
-
 
 app_name = 'api'
 
@@ -37,5 +31,4 @@ v1_router.register(r'auth/token', TokenViewSet, basename='token')
 
 urlpatterns = [
     path('', include(v1_router.urls)),
-    # path('auth/token/', token, name='token'),
 ]

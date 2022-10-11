@@ -1,10 +1,9 @@
-from asyncio import constants
-from secrets import choice
+from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth.models import AbstractUser, UserManager
 
 
 class User(AbstractUser):
+    """Модель для работы с пользователями"""
     CHOICES = (
 
         ('user', 'user'),
@@ -24,7 +23,6 @@ class User(AbstractUser):
 
     confirmation_code = models.CharField(max_length=255, blank=True, null=True)
     password = models.CharField(max_length=255, blank=True, null=True)
-
 
     USERNAME_FIELD = 'username'
 
