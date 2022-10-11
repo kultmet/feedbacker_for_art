@@ -76,6 +76,7 @@ class Title(models.Model):
         related_name='titles',
         verbose_name='Категория'
     )
+    """"
     genre = models.ManyToManyField(
         Genre,
         # through='GenreToTitle',
@@ -87,10 +88,15 @@ class Title(models.Model):
         # blank=True
         # null=True
     )
-    #rating = models.IntegerField(
-     #   verbose_name='Рейтинг',
-      #  null=True,
-       # default=None)
+    """
+    genre = models.ManyToManyField(
+        Genre,
+        through='GenreToTitle',
+        # related_name='titles',
+        # verbose_name='Жанр'
+        # blank=True
+        # null=True
+    )
 
     class Meta:
         verbose_name = 'Произведение'
@@ -104,6 +110,9 @@ class GenreToTitle(models.Model):
     """Модель связывающая произведение с жанром"""
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.title} {self.genre}'
 
 
 class Review(models.Model):
