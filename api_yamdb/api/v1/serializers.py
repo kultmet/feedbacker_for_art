@@ -5,17 +5,13 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
-from rest_framework_simplejwt.serializers import (
-    TokenObtainPairSerializer,
-    TokenObtainSerializer,
-    TokenObtainSlidingSerializer
-)
+from rest_framework_simplejwt.serializers import (TokenObtainPairSerializer,
+                                                  TokenObtainSerializer,
+                                                  TokenObtainSlidingSerializer)
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import (
-    Review, Comment, Title, Category, Genre
-)
+from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 
 
@@ -43,12 +39,22 @@ class TitleSerializerRead(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'description', 'year', 'category', 'genre', 'rating')
+        fields = (
+            'id',
+            'name',
+            'description',
+            'year',
+            'category',
+            'genre',
+            'rating'
+        )
         read_only_fields = ('id',)
 
     def get_rating(self, obj):
         obj = obj.reviews.all().aggregate(rating=Avg('score'))
-        return obj['rating']
+        if obj['rating'] is None:
+            return None
+        return int(obj['rating'])
 
 
 class TitleSerializerCreate(serializers.ModelSerializer):

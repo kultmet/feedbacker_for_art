@@ -1,20 +1,13 @@
-
-from email.policy import default
-
-from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from users.models import User
-
-# User = get_user_model()
 
 
 class Genre(models.Model):
     """Модель для работы с жанрами"""
     name = models.CharField(
         max_length=256,
-        # default='--Пусто--',
         verbose_name='Название жанра'
     )
     slug = models.SlugField(
@@ -75,26 +68,9 @@ class Title(models.Model):
         related_name='titles',
         verbose_name='Категория'
     )
-    """"
-    genre = models.ManyToManyField(
-        Genre,
-        # through='GenreToTitle',
-        # on_delete=models.SET_NULL,
-        # on_delete=models.CASCADE,
-        related_name='titles',
-
-        verbose_name='Жанр'
-        # blank=True
-        # null=True
-    )
-    """
     genre = models.ManyToManyField(
         Genre,
         through='GenreToTitle',
-        # related_name='titles',
-        # verbose_name='Жанр'
-        # blank=True
-        # null=True
     )
 
     class Meta:
@@ -107,8 +83,14 @@ class Title(models.Model):
 
 class GenreToTitle(models.Model):
     """Модель связывающая произведение с жанром"""
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE
+    )
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return f'{self.title} {self.genre}'

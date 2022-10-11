@@ -1,24 +1,30 @@
 from django.contrib import admin
 
-from .models import Category, Genre, Title, Review, Comment
+from .models import Category, Comment, Genre, Review, Title
 
 
 @admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name',)
-    search_fields = ('name',)
-    list_filter = ('name',)
+    list_display = ('pk', 'name', 'description', 'year', 'category')
+    search_fields = ('name', 'year', 'category', 'genre')
+    list_filter = ('name', 'year', 'category', 'genre')
     empty_value_display = '-пусто-'
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('pk', 'name', 'slug')
+    search_fields = ('name', 'slug')
+    list_filter = ('name', 'slug')
+    empty_value_display = '-пусто-'
 
 
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('pk', 'name', 'slug')
+    search_fields = ('name', 'slug')
+    list_filter = ('name', 'slug')
+    empty_value_display = '-пусто-'
 
 
 @admin.register(Review)

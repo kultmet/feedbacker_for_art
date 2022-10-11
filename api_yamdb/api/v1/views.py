@@ -1,32 +1,22 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, viewsets, permissions, mixins, status
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.generics import get_object_or_404
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Category, Genre, Title, Review
+from reviews.models import Category, Genre, Review, Title
 from users.models import User
 from .filters import TitleFilter
-from .permissions import (
-    IsAdminOrSuperuserPermission,
-    TitlePermission,
-    ReviewPermission
-)
-from .serializers import (
-    AdminUserSerializer,
-    CategorySerializer,
-    CommentSerializer,
-    ConfirmationCodeSerializer,
-    GenreSerializer,
-    TitleSerializerRead,
-    TitleSerializerCreate,
-    ReviewSerializer,
-    TokenSerializer,
-    UserSerializer,
-)
-from .utility import generate_confirmation_code, send_email_with_verification_code
+from .permissions import (IsAdminOrSuperuserPermission, ReviewPermission,
+                          TitlePermission)
+from .serializers import (AdminUserSerializer, CategorySerializer,
+                          CommentSerializer, ConfirmationCodeSerializer,
+                          GenreSerializer, ReviewSerializer,
+                          TitleSerializerCreate, TitleSerializerRead,
+                          TokenSerializer, UserSerializer)
+from .utility import (generate_confirmation_code,
+                      send_email_with_verification_code)
 
 
 class CreateDestroyViewSet(
@@ -43,7 +33,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().order_by('name')
     serializer_class = TitleSerializerCreate
     permission_classes = (TitlePermission,)
-    pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
     filter_class = TitleFilter
 
@@ -91,7 +80,6 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с комментариями"""
     serializer_class = CommentSerializer
     permission_classes = (ReviewPermission,)
-    pagination_class = PageNumberPagination
 
     def get_queryset(self):
         review = get_object_or_404(Review, id=self.kwargs['review_id'])
@@ -171,7 +159,11 @@ def signup(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class SignUpViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+class SignUpViewSet(
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = User.objects.all()
     serializer_class = ConfirmationCodeSerializer
 
@@ -186,7 +178,10 @@ class SignUpViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.G
         headers = self.get_success_headers(serializer.data)
         send_email_with_verification_code(data)
         try:
-            return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+            return Response(serializer.data,
+                            status=status.HTTP_200_OK,
+                            headers=headers
+                            )
         except KeyError:
             Response({'confirmation_code': 'Беда с ключами'}, headers=headers)
 
@@ -195,7 +190,9 @@ class SignUpViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.G
         data['email'] = request.data.get('email')
         data['username'] = request.data.get('username')
         data['confirmation_code'] = generate_confirmation_code()
-        user = User.objects.get(username=request.data.get('username'), email=request.data.get('email'))
+        user = User.objects.get(username=request.data.get('username'),
+                                email=request.data.get('email')
+                                )
         serializer = self.get_serializer(user, data=data)
         send_email_with_verification_code(data)
         return Response(serializer.initial_data, status=status.HTTP_200_OK)
@@ -221,18 +218,24 @@ class TokenViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     def create(self, request, *args, **kwargs):
         username = request.data.get('username')
         if username is None:
-            return Response({"fail": "Нельзя без username"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"fail": "Нельзя без username"},
+                            status=status.HTTP_400_BAD_REQUEST
+                            )
         try:
             user = get_object_or_404(User, username=username)
         except Exception:
-            return Response({"not_found": "нет такого"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"not_found": "нет такого"},
+                            status=status.HTTP_404_NOT_FOUND
+                            )
         if request.data.get('confirmation_code') == user.confirmation_code:
             serializer = self.get_serializer(user, data=request.data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response({'bad_request': 'confirmation_code invalid', }, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'bad_request': 'confirmation_code invalid', },
+                            status=status.HTTP_400_BAD_REQUEST
+                            )
 
 
 def get_tokens_for_user(user):
