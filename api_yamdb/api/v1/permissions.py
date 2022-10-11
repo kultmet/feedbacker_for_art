@@ -22,14 +22,6 @@ class IsModeratorPermission(permissions.BasePermission):
 # Пермишены для моделей Title, Category, Genre
 
 class TitlePermission(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        if not request.user.is_authenticated:
-            return False
-        if request.user.role == 'admin' or request.user.is_superuser:
-            return True
-        return False
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
@@ -39,6 +31,16 @@ class TitlePermission(permissions.BasePermission):
         if request.user.role == 'admin' or request.user.is_superuser:
             return True
         return False
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if not request.user.is_authenticated:
+            return False
+        if request.user.role == 'admin' or request.user.is_superuser:
+            return True
+        return False
+
     """"
     def has_permission(self, request, view):
         return (request.method in permissions.SAFE_METHODS

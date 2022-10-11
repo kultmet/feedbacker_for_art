@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
 
 # from rest_framework.decorators import api_view, permission_classes
 # from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAdminUser
@@ -25,6 +26,7 @@ from .serializers import (
     # get_token_for_user,
 )
 from reviews.models import Category, Genre, Title, Review, Comment
+from .filters import TitleFilter
 from users.models import User
 from .utility import generate_confirmation_code, send_email_with_verification_code
 
@@ -45,15 +47,12 @@ class CreateDestroyViewSet(
 # @permission_classes([AllowAny])
 class TitleViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с произведениями"""
-    # queryset = Title.objects.all().annotate(
-    #     rating=Avg('reviews__score')
-    # ).order_by('name')
     queryset = Title.objects.all().order_by('name')
     serializer_class = TitleSerializerCreate
     permission_classes = (TitlePermission,)
     pagination_class = PageNumberPagination
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name', 'year', 'genre__slug', 'category__slug']
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = TitleFilter
 
     def get_serializer_class(self):
         if self.request.method in ('POST', 'PATCH', 'DELETE',):
@@ -71,7 +70,7 @@ class CategoryViewSet(CreateDestroyViewSet):
     permission_classes = (TitlePermission,)
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
-    search_fields = ['slug']
+    search_fields = ['name']
 
 
 class GenreViewSet(CreateDestroyViewSet):
@@ -81,7 +80,7 @@ class GenreViewSet(CreateDestroyViewSet):
     permission_classes = (TitlePermission,)
     pagination_class = PageNumberPagination
     filter_backends = [filters.SearchFilter]
-    search_fields = ['slug']
+    search_fields = ['name']
 
 
 # @api_view(['GET'])

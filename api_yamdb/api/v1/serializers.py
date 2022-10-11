@@ -21,13 +21,6 @@ from users.models import User
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с жанрами"""
-    """"
-    def validate(self, data):
-        if data == {}:
-            raise serializers.ValidationError
-        return data
-    """
 
     class Meta:
         model = Genre
@@ -36,13 +29,6 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с категориями"""
-    """
-    def validate(self, data):
-        if data == {}:
-            raise serializers.ValidationError
-        return data
-    """
 
     class Meta:
         model = Category
@@ -55,16 +41,6 @@ class TitleSerializerRead(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
     rating = serializers.SerializerMethodField()
-    """"
-    def get_rating(self, obj):
-        return Avg('reviews__score')
-    """
-    """
-    def validate(self, data):
-        if data == {}:
-            raise serializers.ValidationError
-        return data
-    """
 
     class Meta:
         model = Title
@@ -76,17 +52,6 @@ class TitleSerializerRead(serializers.ModelSerializer):
     def get_rating(self, obj):
         obj = obj.reviews.all().aggregate(rating=Avg('score'))
         return obj['rating']
-    """
-    def create(self, validated_data):
-        return Title.objects.create(
-            genre=validated_data['genre'],
-            category=validated_data['category']
-        )
-        # genre = validated_data.pop('genre')
-        # category = validated_data.pop('category')
-        # title = Title.objects.create(**validated_data)
-        # return title
-    """
 
 
 class TitleSerializerCreate(serializers.ModelSerializer):
@@ -101,15 +66,7 @@ class TitleSerializerCreate(serializers.ModelSerializer):
         slug_field='slug',
         many=True
     )
-    """
-    def create(self, validated_data):
-        title = Title(
-            genre=validated_data['genre'],
-            category=validated_data['category']
-        )
-        title.save()
-        return title
-    """
+
     class Meta:
         model = Title
         fields = '__all__'
