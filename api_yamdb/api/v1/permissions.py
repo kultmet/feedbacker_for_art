@@ -16,7 +16,7 @@ class IsModeratorPermission(permissions.BasePermission):
     message = 'Ваши полномочия здесь все...'
 
     def has_permission(self, request, view):
-        if request.user.role == 'moderator':
+        if request.user.is_authenticated and request.user.role == 'moderator':
             return True
         return False
 
@@ -34,14 +34,14 @@ class TitlePermission(permissions.BasePermission):
             return True
         return False
 
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        if not request.user.is_authenticated:
-            return False
-        if request.user.role == 'admin' or request.user.is_superuser:
-            return True
-        return False
+    # def has_object_permission(self, request, view, obj):
+    #     if request.method in permissions.SAFE_METHODS:
+    #         return True
+    #     if not request.user.is_authenticated:
+    #         return False
+    #     if request.user.role == 'admin' or request.user.is_superuser:
+    #         return True
+    #     return False
 
 
 class ReviewPermission(permissions.BasePermission):

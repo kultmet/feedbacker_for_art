@@ -2,7 +2,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets, permissions, mixins, status
 from rest_framework.decorators import action, api_view
 from rest_framework.generics import get_object_or_404
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import PageNumberPagination, LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -73,6 +73,10 @@ class GenreViewSet(CreateDestroyViewSet):
     lookup_field = 'slug'
 
 
+    
+        
+
+
 class ReviewViewSet(viewsets.ModelViewSet):
     """Вьюсет для работы с отзывами"""
     serializer_class = ReviewSerializer
@@ -106,10 +110,11 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    permission_classes = (IsAdminOrSuperuserPermission,)
+    permission_classes = (permissions.IsAuthenticated,IsAdminOrSuperuserPermission,)
     lookup_field = 'username'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
+    
 
     def get_serializer_class(self):
         if self.request.user.role != 'admin' or self.request.user.is_superuser:
