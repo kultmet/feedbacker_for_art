@@ -196,25 +196,14 @@ def signup(request):
         if serializer.is_valid():
             serializer.save()
             send_email_with_verification_code(serializer.data)
-            return Response(
-                {
-                    'email': email,
-                    'username': username
-                }, status=status.HTTP_201_CREATED
-            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == 'POST':
-        # if request.data['username'] != 'me':
         serializer = ConfirmationCodeSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             send_email_with_verification_code(serializer.data)
-            return Response(
-                {
-                    'email': email,
-                    'username': username
-                }, status=status.HTTP_200_OK
-            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -229,14 +218,6 @@ class SignUpViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.G
         username = request.data.get('username')
         email = request.data.get('email')
         data['confirmation_code'] = generate_confirmation_code()
-        # if username in User.objects.all():
-        #     user = User.objects.get(username=username)
-        #     serializer = self.get_serializer(user, data=data)
-        #     serializer.is_valid(raise_exception=True)
-        #     self.perform_create(serializer)
-        #     headers = self.get_success_headers(serializer.data)
-        #     send_email_with_verification_code(data)
-        #     return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
@@ -297,12 +278,3 @@ class TokenViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response({'bad_request': 'confirmation_cade invalid',}, status=status.HTTP_400_BAD_REQUEST)
-       
-
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-
-    return {
-        # 'refresh': str(refresh),
-        'access': str(refresh.access_token),
-    }

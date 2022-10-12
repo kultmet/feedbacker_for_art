@@ -10,6 +10,7 @@ from .views import (
     TokenViewSet,
     UserViewSet,
     SignUpViewSet,
+    signup,
     token
 )
 
@@ -33,5 +34,5 @@ v1_router.register(r'auth/token', TokenViewSet, basename='token')
 
 urlpatterns = [
     path('', include(v1_router.urls)),
-    # path('auth/token/', token, name='token'),
+    # path('auth/signup', signup, name='signup')
 ]
