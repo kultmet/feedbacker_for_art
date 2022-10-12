@@ -1,6 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets, permissions, mixins, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -24,10 +24,6 @@ from .serializers import (
     ReviewSerializer,
     TokenSerializer,
     UserSerializer,
-)
-from .utility import (
-    generate_confirmation_code,
-    send_email_with_verification_code
 )
 
 
@@ -141,9 +137,9 @@ class UserViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(User, id=request.user.id)
         if request.method == 'PATCH':
             serializer = UserSerializer(user, data=request.data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-            return Response(serializer.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = self.get_serializer(user, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -156,68 +152,34 @@ class SignUpViewSet(mixins.CreateModelMixin,
     serializer_class = ConfirmationCodeSerializer
 
     def create(self, request, *args, **kwargs):
-        data = {}
-        data['email'] = request.data.get('email')
-        data['username'] = request.data.get('username')
-        data['confirmation_code'] = generate_confirmation_code()
-        serializer = self.get_serializer(data=data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        send_email_with_verification_code(data)
-        try:
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK,
-                headers=headers
-            )
-        except KeyError:
-            Response({'confirmation_code': 'Беда с ключами'}, headers=headers)
-
-    def update(self, request, *args, **kwargs):
-        data = {}
-        data['email'] = request.data.get('email')
-        data['username'] = request.data.get('username')
-        data['confirmation_code'] = generate_confirmation_code()
-        user = User.objects.get(
-            username=request.data.get('username'),
-            email=request.data.get('email')
-        )
-        serializer = self.get_serializer(user, data=data)
-        send_email_with_verification_code(data)
-        return Response(serializer.initial_data, status=status.HTTP_200_OK)
-
-
-class TokenViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    """Генерирует токен авторизации."""
-    serializer_class = TokenSerializer
-
-    def get_queryset(self):
-        return get_object_or_404(
-            User, username=self.request.data.get('username')
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+            headers=headers
         )
 
-    def create(self, request, *args, **kwargs):
-        username = request.data.get('username')
-        if username is None:
-            return Response(
-                {"fail": "Нельзя без username"},
-                status=status.HTTP_400_BAD_REQUEST
+
+@api_view(http_method_names=['POST',])
+def token(request):
+    """Выдает токен авторизации."""
+    if request.data.get('username') is None: 
+        return Response( 
+            {"fail": "Нельзя без username"}, 
+            status=status.HTTP_400_BAD_REQUEST 
+        ) 
+    try:
+        user = get_object_or_404(User, username=request.data.get('username'))
+    except Exception:
+        return Response(
+            {"not_found": "нет такого"},
+            status=status.HTTP_404_NOT_FOUND
             )
-        try:
-            user = get_object_or_404(User, username=username)
-        except Exception:
-            return Response(
-                {"not_found": "нет такого"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        if request.data.get('confirmation_code') == user.confirmation_code:
-            serializer = self.get_serializer(user, data=request.data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(
-                {'bad_request': 'confirmation_code invalid', },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+    serializer = TokenSerializer(user, data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

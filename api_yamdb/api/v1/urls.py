@@ -7,9 +7,9 @@ from .views import (
     TitleViewSet,
     ReviewViewSet,
     CommentViewSet,
-    TokenViewSet,
     UserViewSet,
-    SignUpViewSet
+    SignUpViewSet,
+    token
 )
 
 app_name = 'api'
@@ -31,8 +31,9 @@ v1_router.register(
 )
 v1_router.register(r'users', UserViewSet, basename='users')
 v1_router.register(r'auth/signup', SignUpViewSet)
-v1_router.register(r'auth/token', TokenViewSet, basename='token')
+# v1_router.register(r'auth/token', TokenViewSet, basename='token')
 
 urlpatterns = [
     path('', include(v1_router.urls)),
+    path('auth/token/', token, name='token'),
 ]

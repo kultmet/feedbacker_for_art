@@ -1,5 +1,6 @@
+from email.policy import default
 from django.db.models import Avg
-from rest_framework import exceptions, serializers
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.relations import SlugRelatedField
@@ -8,6 +9,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Review, Comment, Title, Category, Genre
 from users.models import User
+from .utility import (
+    generate_confirmation_code,
+    send_email_with_verification_code
+)
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -80,7 +85,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         title_id = self.context['view'].kwargs.get('title_id')
         title = get_object_or_404(Title, pk=title_id)
         if request.method == 'POST':
-            if Review.objects.filter(title=title, author=author).exists():
+            if title.reviews.select_related('title').filter(author=author):
                 raise ValidationError(
                     'Отзыв можно оставить один раз!'
                 )
@@ -175,7 +180,9 @@ class ConfirmationCodeSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
-    confirmation_code = serializers.CharField(max_length=255, write_only=True)
+    confirmation_code = serializers.HiddenField(
+        default=generate_confirmation_code()
+    )
 
     class Meta:
         fields = ('email', 'username', 'confirmation_code')
@@ -187,6 +194,11 @@ class ConfirmationCodeSerializer(serializers.ModelSerializer):
             ),
         )
 
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        send_email_with_verification_code(validated_data)
+        return user
+
     def validate_username(self, value):
         if value == 'me':
             raise serializers.ValidationError('А username не может быть "me"')
@@ -196,14 +208,16 @@ class ConfirmationCodeSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.ModelSerializer):
     """Сериализатор для получения токена."""
     username = serializers.CharField(
+        allow_blank=False,
         max_length=250,
-        validators=[UniqueValidator(queryset=User.objects.all())],
         write_only=True,
     )
     confirmation_code = serializers.CharField(
-        max_length=255, write_only=True
+        allow_blank=False,
+        max_length=255,
+        write_only=True
     )
-    access = serializers.SerializerMethodField(method_name='get_access', )
+    access = serializers.SerializerMethodField(method_name='get_access')
 
     class Meta:
         fields = ('username', 'confirmation_code', 'access')
@@ -213,26 +227,17 @@ class TokenSerializer(serializers.ModelSerializer):
         refresh = RefreshToken.for_user(obj)
         return str(refresh.access_token)
 
-    def validate_username(self, value):
-        if value == '':
+    def validate(self, data):
+        user = User.objects.filter(
+            username=data['username'],
+            confirmation_code=data['confirmation_code']
+        ).exists()
+        if not user:
             raise serializers.ValidationError(
-                'А username не может быть пустым'
+                'Такого пользователя нет.'
             )
-        if value not in User.objects.all():
-            return exceptions.NotFound('Not found')
-        if type(value) is not str:
-            return serializers.ValidationError('Не строка')
-        return value
-
-    def validate_confirmation_vode(self, value):
-        if value == '':
+        if data['confirmation_code'] != user.confirmation_code:
             raise serializers.ValidationError(
-                'А confirmation_code не может быть пустым'
+                'Код подтверждения не совпадает.'
             )
-        if not value:
-            raise serializers.ValidationError(
-                'А confirmation_code не может not value'
-            )
-        if type(value) is not str:
-            return serializers.ValidationError('Не строка')
-        return value
+        return data
