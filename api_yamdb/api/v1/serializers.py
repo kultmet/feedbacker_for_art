@@ -1,21 +1,12 @@
-from django.contrib.auth import authenticate, models
 from django.db.models import Avg
 from rest_framework import exceptions, serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
-from rest_framework_simplejwt.serializers import (
-    TokenObtainPairSerializer,
-    TokenObtainSerializer,
-    TokenObtainSlidingSerializer
-)
-from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import (
-    Review, Comment, Title, Category, Genre
-)
+from reviews.models import Review, Comment, Title, Category, Genre
 from users.models import User
 
 
@@ -43,7 +34,9 @@ class TitleSerializerRead(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'description', 'year', 'category', 'genre', 'rating')
+        fields = (
+            'id', 'name', 'description', 'year', 'category', 'genre', 'rating'
+        )
         read_only_fields = ('id',)
 
     def get_rating(self, obj):
@@ -52,7 +45,7 @@ class TitleSerializerRead(serializers.ModelSerializer):
 
 
 class TitleSerializerCreate(serializers.ModelSerializer):
-    """Сериализатор для работы с произведениями при создании"""
+    """Сериализатор для работы с произведениями при создании."""
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
         slug_field='slug'
@@ -69,7 +62,7 @@ class TitleSerializerCreate(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с отзывами"""
+    """Сериализатор для работы с отзывами."""
     author = SlugRelatedField(
         slug_field='username', read_only=True
     )
@@ -95,7 +88,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с отзывами"""
+    """Сериализатор для работы с отзывами."""
     author = serializers.SlugRelatedField(
         slug_field='username', read_only=True
     )
@@ -109,6 +102,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
+    """Сериализатор для админа."""
     username = serializers.CharField(
         max_length=200,
         validators=[UniqueValidator(queryset=User.objects.all())]
@@ -140,6 +134,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для пользователя."""
     username = serializers.CharField(
         max_length=200,
         validators=[UniqueValidator(queryset=User.objects.all())]
@@ -172,6 +167,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ConfirmationCodeSerializer(serializers.ModelSerializer):
+    """Сериализатор для получения кода подтверждения."""
     username = serializers.CharField(
         max_length=200,
         validators=[UniqueValidator(queryset=User.objects.all())]
@@ -198,6 +194,7 @@ class ConfirmationCodeSerializer(serializers.ModelSerializer):
 
 
 class TokenSerializer(serializers.ModelSerializer):
+    """Сериализатор для получения токена."""
     username = serializers.CharField(
         max_length=250,
         validators=[UniqueValidator(queryset=User.objects.all())],
@@ -218,7 +215,9 @@ class TokenSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         if value == '':
-            raise serializers.ValidationError('А username не может быть пустым')
+            raise serializers.ValidationError(
+                'А username не может быть пустым'
+            )
         if value not in User.objects.all():
             return exceptions.NotFound('Not found')
         if type(value) is not str:
@@ -237,72 +236,3 @@ class TokenSerializer(serializers.ModelSerializer):
         if type(value) is not str:
             return serializers.ValidationError('Не строка')
         return value
-
-
-class MyObtainSerializer(TokenObtainSerializer):
-    username_field = User().USERNAME_FIELD
-    token_class = None
-
-    default_error_messages = {
-        "no_active_account":
-            "No active account found with the given credentials"
-    }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.fields[self.username_field] = serializers.CharField()
-        self.fields["confirmation_code"] = serializers.IntegerField()
-
-    def validate(self, attrs):
-        authenticate_kwargs = {
-            self.username_field: attrs[self.username_field],
-            "confirmation_code": attrs["confirmation_code"],
-        }
-        try:
-            authenticate_kwargs["request"] = self.context["request"]
-        except KeyError:
-            pass
-        self.user = authenticate(**authenticate_kwargs)
-        return {}
-
-
-class MyTokenObtainPairSerializer(MyObtainSerializer):
-    token_class = RefreshToken
-
-    def validate(self, attrs):
-        data = super().validate(attrs)
-
-        refresh = self.get_token(self.user)
-
-        data["refresh"] = str(refresh)
-        data["access"] = str(refresh.access_token)
-
-        if api_settings.UPDATE_LAST_LOGIN:
-            models.update_last_login(None, self.user)
-
-        return data
-
-
-def get_token_for_user(user):
-    refresh = RefreshToken(user)
-
-    return {'refresh': str(refresh), 'access': str(refresh.access_token)}
-
-
-class MyTok(TokenObtainSlidingSerializer):
-    pass
-
-
-class Fuck(TokenObtainPairSerializer):
-    username_field = User.USERNAME_FIELD
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.fields[self.username_field] = serializers.CharField()
-        self.fields["confirmation_code"] = serializers.CharField()
-
-    def validate(self, attrs):
-        print(attrs)
-        return super().validate(attrs)
