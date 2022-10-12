@@ -11,7 +11,7 @@ from users.models import User
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с жанрами произведений"""
+    """Сериализатор для работы с жанрами произведений."""
 
     class Meta:
         model = Genre
@@ -19,7 +19,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с категориями"""
+    """Сериализатор для работы с категориями."""
 
     class Meta:
         model = Category
@@ -27,7 +27,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TitleSerializerRead(serializers.ModelSerializer):
-    """Сериализатор для работы с произведениями при чтении"""
+    """Сериализатор для работы с произведениями при чтении."""
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
     rating = serializers.SerializerMethodField()
