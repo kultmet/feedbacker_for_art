@@ -16,7 +16,7 @@ class Command(BaseCommand):
 
     help = 'Загрузка информации из csv файлов в базу данных'
 
-    def handle(self, *args, **options):
+    def fill_user(self):
         with open(os.path.join(settings.BASE_DIR, 'static/data/users.csv'),
                   'rt', encoding='utf-8') as csv_file:
             reader = csv.reader(csv_file)
@@ -32,6 +32,7 @@ class Command(BaseCommand):
                         last_name=row[6]
                     )
 
+    def fill_category(self):
         with open(os.path.join(settings.BASE_DIR, 'static/data/category.csv'),
                   'r', encoding='utf-8') as csv_file:
             reader = csv.reader(csv_file)
@@ -41,6 +42,7 @@ class Command(BaseCommand):
                         id=row[0], name=row[1], slug=row[2]
                     )
 
+    def fill_genre(self):
         with open(os.path.join(settings.BASE_DIR, 'static/data/genre.csv'),
                   'r', encoding='utf-8') as csv_file:
             reader = csv.reader(csv_file)
@@ -50,6 +52,7 @@ class Command(BaseCommand):
                         id=row[0], name=row[1], slug=row[2]
                     )
 
+    def fill_titles(self):
         with open(os.path.join(settings.BASE_DIR, 'static/data/titles.csv'),
                   'rt', encoding='utf-8') as csv_file:
             reader = csv.reader(csv_file)
@@ -59,6 +62,7 @@ class Command(BaseCommand):
                         id=row[0], name=row[1], year=row[2], category_id=row[3]
                     )
 
+    def fill_genre_title(self):
         with open(
                 os.path.join(settings.BASE_DIR, 'static/data/genre_title.csv'),
                 'r',
@@ -71,6 +75,7 @@ class Command(BaseCommand):
                         id=row[0], title_id=row[1], genre_id=row[2]
                     )
 
+    def fill_review(self):
         with open(os.path.join(settings.BASE_DIR, 'static/data/review.csv'),
                   'r', encoding='utf-8') as csv_file:
             reader = csv.reader(csv_file)
@@ -85,6 +90,7 @@ class Command(BaseCommand):
                         pub_date=row[5]
                     )
 
+    def fill_comments(self):
         with open(os.path.join(settings.BASE_DIR, 'static/data/comments.csv'),
                   'r', encoding='utf-8') as csv_file:
             reader = csv.reader(csv_file)
@@ -97,3 +103,12 @@ class Command(BaseCommand):
                         author_id=row[3],
                         pub_date=row[4]
                     )
+
+    def handle(self, *args, **options):
+        self.fill_user()
+        self.fill_category()
+        self.fill_genre()
+        self.fill_titles()
+        self.fill_genre_title()
+        self.fill_review()
+        self.fill_comments()
