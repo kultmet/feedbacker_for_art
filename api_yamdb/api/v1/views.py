@@ -119,8 +119,10 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)
 
     def get_serializer_class(self):
-        if (self.request.user.role != 'admin' 
-        or self.request.user.is_superuser):
+        if (
+            self.request.user.role != 'admin'
+            or self.request.user.is_superuser
+        ):
             return UserSerializer
         return AdminUserSerializer
 
