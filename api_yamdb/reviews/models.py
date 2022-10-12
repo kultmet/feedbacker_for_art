@@ -1,7 +1,3 @@
-
-from email.policy import default
-
-from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
@@ -75,26 +71,9 @@ class Title(models.Model):
         related_name='titles',
         verbose_name='Категория'
     )
-    """"
-    genre = models.ManyToManyField(
-        Genre,
-        # through='GenreToTitle',
-        # on_delete=models.SET_NULL,
-        # on_delete=models.CASCADE,
-        related_name='titles',
-
-        verbose_name='Жанр'
-        # blank=True
-        # null=True
-    )
-    """
     genre = models.ManyToManyField(
         Genre,
         through='GenreToTitle',
-        # related_name='titles',
-        # verbose_name='Жанр'
-        # blank=True
-        # null=True
     )
 
     class Meta:
