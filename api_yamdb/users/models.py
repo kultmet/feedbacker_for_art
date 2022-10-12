@@ -18,10 +18,10 @@ class User(AbstractUser):
         unique=True
     )
     bio = models.TextField(blank=True, null=True)
-
     role = models.CharField(max_length=15, choices=CHOICES, default='user')
-
-    confirmation_code = models.CharField(max_length=255, blank=True, null=True)
+    confirmation_code = models.CharField(
+        max_length=255, blank=True, null=True
+    )
     password = models.CharField(max_length=255, blank=True, null=True)
 
     USERNAME_FIELD = 'username'
