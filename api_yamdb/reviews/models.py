@@ -3,14 +3,11 @@ from django.db import models
 
 from users.models import User
 
-# User = get_user_model()
-
 
 class Genre(models.Model):
     """Модель для работы с жанрами"""
     name = models.CharField(
         max_length=256,
-        # default='--Пусто--',
         verbose_name='Название жанра'
     )
     slug = models.SlugField(
@@ -59,7 +56,6 @@ class Title(models.Model):
     description = models.TextField(
         verbose_name='Описание произведения'
     )
-
     year = models.PositiveSmallIntegerField(
         verbose_name='Год создания произведения'
     )
