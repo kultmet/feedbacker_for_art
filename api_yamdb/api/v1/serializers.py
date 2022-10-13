@@ -4,7 +4,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
-from rest_framework_simplejwt.tokens import RefreshToken
+
 
 from reviews.models import Review, Comment, Title, Category, Genre
 from users.models import User
@@ -180,7 +180,7 @@ class ConfirmationCodeSerializer(serializers.ModelSerializer):
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
     confirmation_code = serializers.HiddenField(
-        default=generate_confirmation_code()
+        default='fuck_off'
     )
 
     class Meta:
@@ -194,6 +194,7 @@ class ConfirmationCodeSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
+        validated_data['confirmation_code'] = generate_confirmation_code()
         user = User.objects.create_user(**validated_data)
         send_email_with_verification_code(validated_data)
         return user
@@ -204,39 +205,31 @@ class ConfirmationCodeSerializer(serializers.ModelSerializer):
         return value
 
 
-class TokenSerializer(serializers.ModelSerializer):
+class TokenSerializer(serializers.Serializer):
     """Сериализатор для получения токена."""
     username = serializers.CharField(
-        allow_blank=False,
+        # allow_blank=True,
         max_length=250,
         write_only=True,
     )
     confirmation_code = serializers.CharField(
-        allow_blank=False,
         max_length=255,
         write_only=True
     )
-    access = serializers.SerializerMethodField(method_name='get_access')
 
-    class Meta:
-        fields = ('username', 'confirmation_code', 'access')
-        model = User
-
-    def get_access(self, obj):
-        refresh = RefreshToken.for_user(obj)
-        return str(refresh.access_token)
+    def validate_confirmation_code(self, value):
+        if value == 'fuck_off':
+            return serializers.ValidationError('Код не создался.')
+        return value
 
     def validate(self, data):
-        user = User.objects.filter(
-            username=data['username'],
+        user = get_object_or_404(User, username=data['username'])
+        user_1 = User.objects.filter(
+            username=user.username,
             confirmation_code=data['confirmation_code']
         ).exists()
-        if not user:
+        if not user_1:
             raise serializers.ValidationError(
                 'Такого пользователя нет.'
-            )
-        if data['confirmation_code'] != user.confirmation_code:
-            raise serializers.ValidationError(
-                'Код подтверждения не совпадает.'
             )
         return data

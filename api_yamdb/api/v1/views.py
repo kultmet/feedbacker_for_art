@@ -4,6 +4,7 @@ from rest_framework.decorators import action, api_view
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Title, Review
 from users.models import User
@@ -43,7 +44,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (TitlePermission,)
     pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
-    filter_class = TitleFilter
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.request.method in ('POST', 'PATCH', 'DELETE',):
@@ -166,20 +167,9 @@ class SignUpViewSet(mixins.CreateModelMixin,
 @api_view(http_method_names=['POST', ])
 def token(request):
     """Выдает токен авторизации."""
-    if request.data.get('username') is None:
-        return Response(
-            {"fail": "Нельзя без username"},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    try:
-        user = get_object_or_404(User, username=request.data.get('username'))
-    except Exception:
-        return Response(
-            {"not_found": "нет такого"},
-            status=status.HTTP_404_NOT_FOUND
-        )
-    serializer = TokenSerializer(user, data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    serializer = TokenSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    data = serializer.validated_data
+    user = get_object_or_404(User, **data)
+    refresh = RefreshToken.for_user(user)
+    return Response({'accass': str(refresh.access_token)}, status=status.HTTP_201_CREATED)
