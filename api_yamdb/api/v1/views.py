@@ -43,7 +43,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (TitlePermission,)
     pagination_class = PageNumberPagination
     filter_backends = (DjangoFilterBackend,)
-    filter_class = TitleFilter
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.request.method in ('POST', 'PATCH', 'DELETE',):

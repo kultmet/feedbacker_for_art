@@ -27,6 +27,7 @@ class User(AbstractUser):
     USERNAME_FIELD = 'username'
 
     class Meta:
+        ordering = ['id']
         constraints = [
             models.UniqueConstraint(
                 fields=['username', 'email'],
