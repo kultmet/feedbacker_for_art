@@ -1,4 +1,3 @@
-from email.policy import default
 from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError

@@ -163,21 +163,21 @@ class SignUpViewSet(mixins.CreateModelMixin,
         )
 
 
-@api_view(http_method_names=['POST',])
+@api_view(http_method_names=['POST', ])
 def token(request):
     """Выдает токен авторизации."""
-    if request.data.get('username') is None: 
-        return Response( 
-            {"fail": "Нельзя без username"}, 
-            status=status.HTTP_400_BAD_REQUEST 
-        ) 
+    if request.data.get('username') is None:
+        return Response(
+            {"fail": "Нельзя без username"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     try:
         user = get_object_or_404(User, username=request.data.get('username'))
     except Exception:
         return Response(
             {"not_found": "нет такого"},
             status=status.HTTP_404_NOT_FOUND
-            )
+        )
     serializer = TokenSerializer(user, data=request.data)
     if serializer.is_valid():
         serializer.save()
