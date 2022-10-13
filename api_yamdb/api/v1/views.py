@@ -172,4 +172,6 @@ def token(request):
     data = serializer.validated_data
     user = get_object_or_404(User, **data)
     refresh = RefreshToken.for_user(user)
-    return Response({'accass': str(refresh.access_token)}, status=status.HTTP_201_CREATED)
+    return Response(
+        {'accass': str(refresh.access_token)}, status=status.HTTP_201_CREATED
+    )
