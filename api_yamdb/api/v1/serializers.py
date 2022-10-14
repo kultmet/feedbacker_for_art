@@ -179,12 +179,9 @@ class ConfirmationCodeSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())]
     )
-    confirmation_code = serializers.HiddenField(
-        default='fuck_off'
-    )
 
     class Meta:
-        fields = ('email', 'username', 'confirmation_code')
+        fields = ('email', 'username')
         model = User
         validators = (
             UniqueTogetherValidator(
@@ -208,7 +205,6 @@ class ConfirmationCodeSerializer(serializers.ModelSerializer):
 class TokenSerializer(serializers.Serializer):
     """Сериализатор для получения токена."""
     username = serializers.CharField(
-        # allow_blank=True,
         max_length=250,
         write_only=True,
     )
@@ -216,11 +212,6 @@ class TokenSerializer(serializers.Serializer):
         max_length=255,
         write_only=True
     )
-
-    def validate_confirmation_code(self, value):
-        if value == 'fuck_off':
-            return serializers.ValidationError('Код не создался.')
-        return value
 
     def validate(self, data):
         user = get_object_or_404(User, username=data['username'])
